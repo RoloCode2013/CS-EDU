@@ -1,0 +1,92 @@
+       :root {
+           --bg-dark: #0a0b10;
+           --panel-bg: #121420;
+           --panel-border: #1f233b;
+           --canvas-bg: #07080d;
+           --text-main: #f0f2fa;
+           --text-muted: #62698a;
+           --accent-neon: #00f0ff;
+           --accent-glow: rgba(0, 240, 255, 0.4);
+          
+           --logic-high: #39ff14;
+           --logic-high-glow: rgba(57, 255, 20, 0.5);
+           --logic-low: #ff3131;
+           --logic-low-glow: rgba(255, 49, 49, 0.3);
+           --wire-dim: #2d314d;
+          
+           --grid-size: 20px;
+       }
+      
+      header {
+           height: 55px;
+           background-color: var(--panel-bg);
+           border-bottom: 2px solid var(--panel-border);
+           display: flex;
+           align-items: center;
+           justify-content: space-between;
+           padding: 0 20px;
+           z-index: 10;
+           box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+       }
+
+     .title {
+           display: flex;
+           align-items: center;
+           gap: 10px;
+           font-weight: 800;
+           font-size: 1.15rem;
+           letter-spacing: 1px;
+           color: var(--accent-neon);
+           text-shadow: 0 0 10px var(--accent-glow);
+       }
+
+        body {
+           margin: 0;
+           padding: 0;
+           width: 100vw;
+           height: 100vh;
+           background-color: var(--bg-dark);
+           color: var(--text-main);
+           font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+           display: flex;
+           flex-direction: column;
+           overflow: hidden;
+       }
+
+              .global-controls {
+           display: flex;
+           gap: 12px;
+       }
+
+              .btn {
+           background-color: #1a1d30;
+           border: 1px solid var(--panel-border);
+           color: var(--text-main);
+           padding: 8px 16px;
+           border-radius: 6px;
+           cursor: pointer;
+           font-weight: 600;
+           font-size: 0.85rem;
+           display: flex;
+           align-items: center;
+           gap: 8px;
+           transition: all 0.3s ease;
+       }
+
+
+       .btn:hover {
+           border-color: var(--accent-neon);
+           background-color: #222741;
+           box-shadow: 0 0 8px var(--accent-glow);
+       }
+
+       .text {
+            display: flex;
+           align-items: center;
+           gap: 10px;
+           font-weight: 800;
+           font-size: 1.15rem;
+           letter-spacing: 1px;
+           color: var(--accent-neon);
+           text-shadow: 0 0 10px var(--accent-glow);
+       }

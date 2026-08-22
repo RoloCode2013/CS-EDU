@@ -1,0 +1,12 @@
+{
+    "schematics": [
+        {
+            "name": "Half Adder",
+            "file": "half_adder.cm2"
+        },
+        {
+            "name": "4 bit memory",
+            "file": "4bit_memory.cm2"
+        }
+    ]
+}

@@ -1,0 +1,165 @@
+{
+  "format": "Circuit Maker 2",
+  "fileType": "CM2",
+  "version": 1,
+  "savedAt": "2026-08-12T00:57:47.962Z",
+  "nodeCounter": 7,
+  "nodes": {
+    "node_1": {
+      "id": "node_1",
+      "type": "SWITCH",
+      "x": 180,
+      "y": 160,
+      "width": 100,
+      "height": 60,
+      "inputs": {},
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "Switch Pin",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_2": {
+      "id": "node_2",
+      "type": "AND",
+      "x": 320,
+      "y": 160,
+      "width": 100,
+      "height": 80,
+      "inputs": {
+        "in1": false,
+        "in2": false
+      },
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "AND Junction",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_3": {
+      "id": "node_3",
+      "type": "SWITCH",
+      "x": 180,
+      "y": 240,
+      "width": 100,
+      "height": 60,
+      "inputs": {},
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "Switch Pin",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_4": {
+      "id": "node_4",
+      "type": "XOR",
+      "x": 320,
+      "y": 240,
+      "width": 100,
+      "height": 80,
+      "inputs": {
+        "in1": false,
+        "in2": false
+      },
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "XOR Junction",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_7": {
+      "id": "node_7",
+      "type": "SEGMENT_7",
+      "x": 480,
+      "y": 180,
+      "width": 120,
+      "height": 130,
+      "inputs": {
+        "d0": false,
+        "d1": false,
+        "d2": false,
+        "d3": false
+      },
+      "outputs": {},
+      "properties": {},
+      "customLabel": "7-Seg Panel",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    }
+  },
+  "wires": [
+    {
+      "from": {
+        "nodeId": "node_1",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_2",
+        "portName": "in1"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_3",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_2",
+        "portName": "in2"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_1",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_4",
+        "portName": "in1"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_3",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_4",
+        "portName": "in2"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_2",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_7",
+        "portName": "d1"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_4",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_7",
+        "portName": "d0"
+      }
+    }
+  ]
+}

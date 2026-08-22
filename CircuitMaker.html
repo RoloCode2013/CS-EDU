@@ -1,0 +1,4816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Circuit Maker - Logic Simulator</title>
+   <style>
+       :root {
+           --bg-dark: #0a0b10;
+           --panel-bg: #121420;
+           --panel-border: #1f233b;
+           --canvas-bg: #07080d;
+           --text-main: #f0f2fa;
+           --text-muted: #62698a;
+           --accent-neon: #00f0ff;
+           --accent-glow: rgba(0, 240, 255, 0.4);
+          
+           --logic-high: #39ff14;
+           --logic-high-glow: rgba(57, 255, 20, 0.5);
+           --logic-low: #ff3131;
+           --logic-low-glow: rgba(255, 49, 49, 0.3);
+           --wire-dim: #2d314d;
+          
+           --grid-size: 20px;
+       }
+
+
+       * {
+           box-sizing: border-box;
+           user-select: none;
+       }
+
+
+       body {
+           margin: 0;
+           padding: 0;
+           width: 100vw;
+           height: 100vh;
+           background-color: var(--bg-dark);
+           color: var(--text-main);
+           font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+           display: flex;
+           flex-direction: column;
+           overflow: hidden;
+       }
+
+
+       /* Top Header Control Bar */
+       header {
+           height: 55px;
+           background-color: var(--panel-bg);
+           border-bottom: 2px solid var(--panel-border);
+           display: flex;
+           align-items: center;
+           justify-content: space-between;
+           padding: 0 20px;
+           z-index: 10;
+           box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+       }
+
+
+       .logo-area {
+           display: flex;
+           align-items: center;
+           gap: 10px;
+           font-weight: 800;
+           font-size: 1.15rem;
+           letter-spacing: 1px;
+           color: var(--accent-neon);
+           text-shadow: 0 0 10px var(--accent-glow);
+       }
+
+
+       .global-controls {
+           display: flex;
+           gap: 12px;
+       }
+
+
+       .btn {
+           background-color: #1a1d30;
+           border: 1px solid var(--panel-border);
+           color: var(--text-main);
+           padding: 8px 16px;
+           border-radius: 6px;
+           cursor: pointer;
+           font-weight: 600;
+           font-size: 0.85rem;
+           display: flex;
+           align-items: center;
+           gap: 8px;
+           transition: all 0.2s ease;
+       }
+
+
+       .btn:hover {
+           border-color: var(--accent-neon);
+           background-color: #222741;
+           box-shadow: 0 0 8px var(--accent-glow);
+       }
+
+
+       .btn.danger:hover {
+           border-color: #ff3131;
+           box-shadow: 0 0 8px rgba(255, 49, 49, 0.4);
+       }
+
+
+       /* Main Workspace Studio Split */
+       .workspace {
+           flex: 1;
+           display: flex;
+           position: relative;
+           overflow: hidden;
+       }
+
+
+       /* Left Hand Component Drawer */
+       #toolbox {
+           width: 260px;
+           background-color: var(--panel-bg);
+           border-right: 2px solid var(--panel-border);
+           display: flex;
+           flex-direction: column;
+           z-index: 5;
+           box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+       }
+
+
+       .toolbox-search {
+           padding: 15px;
+           border-bottom: 1px solid var(--panel-border);
+       }
+
+
+       .search-input {
+           width: 100%;
+           background-color: #0b0c12;
+           border: 1px solid var(--panel-border);
+           border-radius: 6px;
+           padding: 8px 12px;
+           color: var(--text-main);
+           font-size: 0.85rem;
+           outline: none;
+       }
+
+
+       .search-input:focus {
+           border-color: var(--accent-neon);
+       }
+
+
+       .category-container {
+           flex: 1;
+           overflow-y: auto;
+           padding: 15px;
+           display: flex;
+           flex-direction: column;
+           gap: 15px;
+       }
+
+
+       .category-title {
+           font-size: 0.75rem;
+           font-weight: 700;
+           color: var(--text-muted);
+           text-transform: uppercase;
+           letter-spacing: 1.5px;
+           margin-bottom: 8px;
+       }
+
+
+       .grid-palette {
+           display: grid;
+           grid-template-columns: repeat(2, 1fr);
+           gap: 10px;
+       }
+
+
+       .palette-item {
+           background-color: #181b2b;
+           border: 1px solid var(--panel-border);
+           border-radius: 8px;
+           padding: 12px 8px;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: center;
+           gap: 8px;
+           cursor: grab;
+           transition: all 0.2s ease;
+           text-align: center;
+       }
+
+
+       .palette-item:hover {
+           border-color: var(--accent-neon);
+           background-color: #1e233a;
+           transform: translateY(-2px);
+       }
+
+
+       .palette-item svg {
+           width: 24px;
+           height: 24px;
+           fill: var(--text-main);
+       }
+
+
+       .palette-item span {
+           font-size: 0.75rem;
+           font-weight: 600;
+       }
+
+
+       /* Simulation Canvas Space */
+       #canvas-viewport {
+           flex: 1;
+           position: relative;
+           background-color: var(--canvas-bg);
+           overflow: auto;
+       }
+
+
+       #circuit-canvas {
+           width: 4000px;
+           height: 4000px;
+           position: relative;
+           background-image:
+               linear-gradient(to right, #131624 1px, transparent 1px),
+               linear-gradient(to bottom, #131624 1px, transparent 1px);
+           background-size: var(--grid-size) var(--grid-size);
+       }
+
+
+       #wire-svg-layer {
+           position: absolute;
+           top: 0;
+           left: 0;
+           width: 100%;
+           height: 100%;
+           pointer-events: none;
+           z-index: 1;
+       }
+
+
+       /* Voxel style component blocks */
+       .component-block {
+           position: absolute;
+           background-color: #16192b;
+           border: 2px solid #282d4d;
+           border-radius: 6px;
+           box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+           z-index: 2;
+           cursor: move;
+           display: flex;
+           flex-direction: column;
+           transition: border-color 0.15s ease;
+       }
+
+
+       .component-block.selected {
+           border-color: var(--accent-neon);
+           box-shadow: 0 0 15px rgba(0, 240, 255, 0.3), 0 8px 16px rgba(0,0,0,0.6);
+       }
+
+
+       .component-header {
+           background-color: #1d213a;
+           padding: 4px 8px;
+           font-size: 0.68rem;
+           font-weight: 700;
+           text-transform: uppercase;
+           letter-spacing: 0.5px;
+           color: var(--text-muted);
+           border-top-left-radius: 4px;
+           border-top-right-radius: 4px;
+           border-bottom: 1px solid #282d4d;
+           pointer-events: none;
+       }
+
+
+       .component-body {
+           flex: 1;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           position: relative;
+           padding: 10px;
+           pointer-events: none;
+       }
+
+
+       .component-label {
+           font-size: 0.95rem;
+           font-weight: 800;
+           color: var(--text-main);
+           letter-spacing: 0.5px;
+       }
+
+
+       /* IO Connection Terminal Ports */
+       .terminal-port {
+           position: absolute;
+           width: 12px;
+           height: 12px;
+           background-color: #2c314f;
+           border: 2px solid #4a5280;
+           border-radius: 50%;
+           pointer-events: auto;
+           cursor: crosshair;
+           transition: all 0.15s ease;
+           z-index: 3;
+       }
+
+
+       .terminal-port:hover {
+           transform: scale(1.3);
+           border-color: var(--accent-neon);
+           box-shadow: 0 0 8px var(--accent-neon);
+       }
+
+       .terminal-port.wiring-source {
+    border-color: var(--accent-neon);
+    background-color: var(--accent-neon);
+    box-shadow:
+        0 0 8px var(--accent-neon),
+        0 0 16px var(--accent-glow);
+    transform: scale(1.3);
+}
+
+.terminal-port.wiring-target {
+    border-color: var(--accent-neon);
+    box-shadow: 0 0 8px var(--accent-neon);
+}
+
+
+       .terminal-port.high {
+           background-color: var(--logic-high);
+           border-color: #a3ff7d;
+           box-shadow: 0 0 8px var(--logic-high-glow);
+       }
+
+
+       .terminal-port.low {
+           background-color: var(--logic-low);
+           border-color: #ff7d7d;
+       }
+
+
+       .port-tag {
+           position: absolute;
+           font-size: 0.58rem;
+           font-weight: 700;
+           color: var(--text-muted);
+           pointer-events: none;
+           white-space: nowrap;
+       }
+
+
+       /* Component Native UI Bindings */
+       .switch-toggle-node {
+           width: 32px;
+           height: 18px;
+           background-color: #0b0c12;
+           border-radius: 10px;
+           position: relative;
+           cursor: pointer;
+           pointer-events: auto;
+           border: 1px solid #2c314f;
+       }
+
+
+       .switch-toggle-node::after {
+           content: '';
+           position: absolute;
+           width: 14px;
+           height: 14px;
+           border-radius: 50%;
+           background-color: #535b82;
+           top: 1px;
+           left: 1px;
+           transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+       }
+
+
+       .switch-toggle-node.active {
+           background-color: rgba(57, 255, 20, 0.15);
+           border-color: var(--logic-high);
+       }
+
+
+       .switch-toggle-node.active::after {
+           left: 15px;
+           background-color: var(--logic-high);
+           box-shadow: 0 0 8px var(--logic-high-glow);
+       }
+
+
+       .push-button-node {
+           width: 24px;
+           height: 24px;
+           background-color: #e63946;
+           border-radius: 4px;
+           border: 2px solid #b3121f;
+           box-shadow: 0 3px 0 #7a0710;
+           cursor: pointer;
+           pointer-events: auto;
+       }
+
+
+       .push-button-node:active {
+           transform: translateY(2px);
+           box-shadow: 0 1px 0 #7a0710;
+       }
+
+
+       .led-indicator-node {
+           width: 28px;
+           height: 28px;
+           border-radius: 50%;
+           background-color: #1a1d30;
+           border: 3px solid #2d3254;
+           transition: all 0.15s ease;
+       }
+
+
+       .led-indicator-node.active {
+           background-color: var(--logic-high);
+           border-color: #a3ff7d;
+           box-shadow: 0 0 20px var(--logic-high);
+       }
+
+
+       /* 7 Segment Panel */
+       .seven-segment-wrapper {
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: center;
+           background-color: #08090f;
+           border-radius: 4px;
+           padding: 4px 10px;
+           border: 1px solid #242947;
+       }
+
+
+       .seven-segment-digit {
+           font-family: monospace;
+           font-size: 2rem;
+           font-weight: 900;
+           color: #1a1d30;
+           text-shadow: 0 0 2px rgba(0,0,0,0.8);
+           line-height: 1;
+       }
+
+
+       .seven-segment-digit.active {
+           color: #ff3131;
+           text-shadow: 0 0 12px rgba(255, 49, 49, 0.85);
+       }
+
+
+       /* Right Side Properties Panel */
+       #properties-panel {
+           width: 260px;
+           background-color: var(--panel-bg);
+           border-left: 2px solid var(--panel-border);
+           display: flex;
+           flex-direction: column;
+           z-index: 5;
+           box-shadow: -4px 0 15px rgba(0,0,0,0.3);
+       }
+
+
+       .panel-header {
+           padding: 15px;
+           font-size: 0.85rem;
+           font-weight: 700;
+           text-transform: uppercase;
+           letter-spacing: 1px;
+           border-bottom: 1px solid var(--panel-border);
+           color: var(--accent-neon);
+       }
+
+
+       .panel-body {
+           padding: 15px;
+           display: flex;
+           flex-direction: column;
+           gap: 15px;
+           flex: 1;
+       }
+
+
+       .property-group {
+           display: flex;
+           flex-direction: column;
+           gap: 6px;
+       }
+
+
+       .property-label {
+           font-size: 0.72rem;
+           font-weight: 600;
+           color: var(--text-muted);
+       }
+
+
+       .property-value {
+           font-size: 0.85rem;
+           font-weight: 700;
+           background-color: #0b0c12;
+           padding: 8px 12px;
+           border-radius: 6px;
+           border: 1px solid var(--panel-border);
+       }
+
+
+       .input-box {
+           width: 100%;
+           background-color: #0b0c12;
+           border: 1px solid var(--panel-border);
+           border-radius: 6px;
+           padding: 8px 12px;
+           color: var(--text-main);
+           font-size: 0.85rem;
+           outline: none;
+       }
+
+
+       .input-box:focus {
+           border-color: var(--accent-neon);
+       }
+
+
+       .empty-inspector-state {
+           color: var(--text-muted);
+           font-size: 0.82rem;
+           text-align: center;
+           margin-top: 40px;
+           font-style: italic;
+       }
+
+       #canvas-viewport {
+    cursor: default;
+}
+
+#canvas-viewport:active {
+    cursor: default;
+}
+
+
+/* =========================================================
+   COLLABORATION CURSORS
+   ========================================================= */
+
+.remote-cursor {
+    position: absolute;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-1px, -1px);
+}
+
+.remote-cursor-arrow {
+    width: 0;
+    height: 0;
+    border-top: 9px solid transparent;
+    border-bottom: 9px solid transparent;
+    border-left: 14px solid currentColor;
+    transform: rotate(-45deg);
+    filter: drop-shadow(0 0 4px currentColor);
+}
+
+.remote-cursor-label {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+
+    padding: 3px 7px;
+
+    border-radius: 4px;
+
+    background: #16192b;
+    border: 1px solid currentColor;
+
+    color: white;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+}
+
+   </style>
+</head>
+<body>
+
+
+   <header>
+       <div class="logo-area">
+           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 12h10M12 7v10"/></svg>
+           CIRCUIT MAKER
+       </div>
+<div class="global-controls">
+
+           <div class="global-controls">
+                <button class="btn" onclick="window.location.href = '/index.html'">
+            Home
+
+    <button class="btn" onclick="saveCircuit()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
+            <path d="M17 21v-8H7v8M7 3v5h8"/>
+        </svg>
+        Save Circuit
+    </button>
+
+    <button class="btn" onclick="openLoadDialog()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+            <path d="M12 3v12"/>
+            <path d="m7 10 5 5 5-5"/>
+            <path d="M5 21h14a2 2 0 0 0 2-2v-5"/>
+        </svg>
+        Load Circuit
+    </button>
+
+    <button class="btn" onclick="openCollaboration()">
+    <svg width="14" height="14"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2">
+
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+
+    Collaboration Menu
+</button>
+
+    <button class="btn danger" onclick="clearWorkspace()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+        Clear Project
+    </button>
+
+    <!-- Hidden file picker -->
+    <input
+        type="file"
+        id="cm2-file-input"
+        accept=".cm2,application/json"
+        style="display:none"
+        onchange="loadCircuitFile(event)"
+    >
+
+</div>
+   </header>
+
+
+   <div class="workspace">
+       <!-- Palette Drawer -->
+       <div id="toolbox">
+           <div class="toolbox-search">
+               <input type="text" class="search-input" id="search-box" placeholder="Search elements..." oninput="filterPalette()">
+           </div>
+           <div class="category-container">
+               <div>
+                   <div class="category-title">Inputs</div>
+                   <div class="grid-palette">
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'SWITCH')">
+                           <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>
+                           <span>Toggle Switch</span>
+                       </div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'BUTTON')">
+                           <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" stroke-width="2" fill="none"/><rect x="8" y="8" width="8" height="8" fill="currentColor"/></svg>
+                           <span>Button</span>
+                       </div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'CLOCK')">
+                           <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                           <span>Clock</span>
+                       </div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'HIGH')">
+                           <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" fill="none"><path d="M12 5v14M5 12h14"/></svg>
+                           <span>VCC Power (+1)</span>
+                       </div>
+                   </div>
+               </div>
+
+
+               <div>
+                   <div class="category-title">Logic Gates</div>
+                   <div class="grid-palette">
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'AND')"><span>AND</span></div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'OR')"><span>OR</span></div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'NOT')"><span>NOT</span></div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'NAND')"><span>NAND</span></div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'NOR')"><span>NOR</span></div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'XOR')"><span>XOR</span></div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'XNOR')"><span>XNOR</span></div>
+                   </div>
+               </div>
+
+
+               <div>
+                   <div class="category-title">Memory & Advanced</div>
+                   <div class="grid-palette">
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'T_FF')"><span>T-FlipFlop</span></div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'D_FF')"><span>D-FlipFlop</span></div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'COUNTER_4BIT')"><span>4-Bit Counter</span></div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'ASSEMBLER')">    <span>Assembler Unit</span></div>
+                   </div>
+               </div>
+
+
+               <div>
+                   <div class="category-title">Outputs</div>
+                   <div class="grid-palette">
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'LED')">
+                           <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 2v20M5 12h14"/></svg>
+                           <span>LED</span>
+                       </div>
+                       <div class="palette-item" draggable="true" ondragstart="onPaletteDragStart(event, 'SEGMENT_7')">
+                           <span>7-Seg Display</span>
+                       </div>
+                   </div>
+               </div>
+
+<div>
+    <div class="category-title">Premade Schematics</div>
+
+    <div class="grid-palette" id="premade-schematics-list">
+        <div style="
+            grid-column:1/-1;
+            color:var(--text-muted);
+            font-size:11px;
+            text-align:center;
+            padding:10px;
+        ">
+            Loading...
+        </div>
+    </div>
+</div>
+
+           </div>
+       </div>
+
+
+       <!-- Working Engine Canvas Viewport -->
+       <div id="canvas-viewport">
+           <div id="circuit-canvas" ondragover="allowDropOverCanvas(event)" ondrop="onCanvasDrop(event)" onclick="onCanvasBackgroundClick(event)">
+               <svg id="wire-svg-layer"></svg>
+           </div>
+       </div>
+
+
+       <!-- Right Side Properties Box -->
+       <div id="properties-panel">
+           <div class="panel-header">Inspector</div>
+           <div class="panel-body" id="inspector-content">
+               <div class="empty-inspector-state">Select a node block component to inspect properties.</div>
+           </div>
+       </div>
+   </div>
+
+
+   <script>
+       const GRID = 20;
+       let studioState = {
+           nodes: {},
+           wires: [],
+           selectedNodeId: null,
+           activeWiringSource: null,
+           nodeCounter: 0
+       };
+
+       // Standard specifications layout geometry properties for blocks
+       const COMPONENT_SPECS = {
+           'SWITCH': { width: 100, height: 60, title: 'Switch Pin', inputs: [], outputs: ['out'] },
+           'BUTTON': { width: 100, height: 60, title: 'Button Trigger', inputs: [], outputs: ['out'] },
+           'CLOCK': { width: 120, height: 60, title: 'Clock Pxl', inputs: [], outputs: ['out'], defaultProps: { interval: 1000 } },
+           'HIGH': { width: 80, height: 50, title: 'Power Source', inputs: [], outputs: ['out'] },
+           'NOT': { width: 100, height: 60, title: 'NOT Inverter', inputs: ['in'], outputs: ['out'] },
+           'AND': { width: 100, height: 80, title: 'AND Junction', inputs: ['in1', 'in2'], outputs: ['out'] },
+           'OR': { width: 100, height: 80, title: 'OR Junction', inputs: ['in1', 'in2'], outputs: ['out'] },
+           'NAND': { width: 100, height: 80, title: 'NAND Junction', inputs: ['in1', 'in2'], outputs: ['out'] },
+           'NOR': { width: 100, height: 80, title: 'NOR Junction', inputs: ['in1', 'in2'], outputs: ['out'] },
+           'XOR': { width: 100, height: 80, title: 'XOR Junction', inputs: ['in1', 'in2'], outputs: ['out'] },
+           'XNOR': { width: 100, height: 80, title: 'XNOR Junction', inputs: ['in1', 'in2'], outputs: ['out'] },
+           'T_FF': { width: 120, height: 90, title: 'T Flip-Flop', inputs: ['clk', 't'], outputs: ['q', 'q_bar'] },
+           'D_FF': { width: 120, height: 90, title: 'D Flip-Flop', inputs: ['clk', 'd'], outputs: ['q', 'q_bar'] },
+           'COUNTER_4BIT': { width: 140, height: 120, title: '4-Bit Counter', inputs: ['clk', 'rst'], outputs: ['q0', 'q1', 'q2', 'q3'] },
+           'LED': { width: 90, height: 70, title: 'Output LED', inputs: ['in'], outputs: [] },
+           'SEGMENT_7': { width: 120, height: 130, title: '7-Seg Panel', inputs: ['d0', 'd1', 'd2', 'd3'], outputs: [] },
+           'ASSEMBLER': {width: 260, height: 280, title: '8-Bit Assembler', inputs: ['a0', 'a1', 'a2', 'a3','a4', 'a5', 'a6', 'a7','a8', 'a9', 'a10', 'a11'], outputs: ['opcode0','opcode1','opcode2','opcode3','opcode4','opcode5','opcode6','opcode7','byte10','byte11','byte12','byte13','byte14','byte15','byte16','byte17','byte20','byte21','byte22','byte23','byte24','byte25','byte26','byte27','byte30','byte31','byte32','byte33','byte34','byte35','byte36','byte37'], defaultProps: { instructions: {NOP: 0, ADD: 1, SUB: 2}, program: `NOP`}}
+       };
+
+
+       function onPaletteDragStart(ev, type) {
+           ev.dataTransfer.setData("text/plain", type);
+       }
+
+
+       function allowDropOverCanvas(ev) {
+           ev.preventDefault();
+       }
+
+
+       function snapToGrid(num) {
+           return Math.round(num / GRID) * GRID;
+       }
+
+
+async function onCanvasDrop(ev) {
+
+    ev.preventDefault();
+
+
+    const dragData =
+        ev.dataTransfer.getData(
+            'text/plain'
+        );
+
+
+    const rect =
+        document
+            .getElementById(
+                'circuit-canvas'
+            )
+            .getBoundingClientRect();
+
+
+    const viewContainer =
+        document.getElementById(
+            'canvas-viewport'
+        );
+
+
+    const rawX =
+        ev.clientX -
+        rect.left +
+        viewContainer.scrollLeft -
+        40;
+
+
+    const rawY =
+        ev.clientY -
+        rect.top +
+        viewContainer.scrollTop -
+        30;
+
+
+    const snappedX =
+        snapToGrid(rawX);
+
+
+    const snappedY =
+        snapToGrid(rawY);
+
+
+    /*
+        Normal component.
+    */
+    if (
+        !dragData.startsWith(
+            'SCHEMATIC:'
+        )
+    ) {
+
+        const type =
+            dragData;
+
+
+        if (!COMPONENT_SPECS[type]) {
+            return;
+        }
+
+
+        instantiateNode(
+            type,
+            snappedX,
+            snappedY
+        );
+
+        evaluateCircuitSimulation();
+
+broadcastCircuitState();
+
+
+        return;
+    }
+
+
+    /*
+        Premade schematic.
+    */
+    const index =
+        parseInt(
+            dragData.substring(
+                'SCHEMATIC:'.length
+            ),
+            10
+        );
+
+
+    if (!Number.isInteger(index)) {
+        return;
+    }
+
+
+    const schematic =
+        premadeSchematics[index];
+
+
+    if (!schematic) {
+        return;
+    }
+
+
+    await insertPremadeSchematic(
+        schematic,
+        snappedX,
+        snappedY
+    );
+}
+
+
+       function instantiateNode(type, x, y) {
+           studioState.nodeCounter++;
+           const id = `node_${studioState.nodeCounter}`;
+           const spec = COMPONENT_SPECS[type];
+
+
+           let nodeObj = {
+               id: id,
+               type: type,
+               x: x,
+               y: y,
+               width: spec.width,
+               height: spec.height,
+               inputs: {},
+               outputs: {},
+               properties: JSON.parse(JSON.stringify(spec.defaultProps || {})),
+               customLabel: spec.title,
+               // Sequential runtime flags
+               lastClkValue: false,
+               currentInternalState: false,
+               counterValue: 0
+           };
+           
+
+
+           // Setup defaults values
+           spec.inputs.forEach(p => nodeObj.inputs[p] = false);
+           spec.outputs.forEach(p => nodeObj.outputs[p] = false);
+
+
+           if (type === 'HIGH') nodeObj.outputs.out = true;
+
+
+           studioState.nodes[id] = nodeObj;
+           renderNodeToDOM(nodeObj);
+          
+           if (type === 'CLOCK') {
+               startClockInterval(nodeObj);
+           }
+
+
+           selectNode(id);
+           evaluateCircuitSimulation();
+       }
+
+
+       function renderNodeToDOM(node) {
+           const spec = COMPONENT_SPECS[node.type];
+           const div = document.createElement('div');
+           div.id = node.id;
+           div.className = 'component-block';
+           div.style.left = `${node.x}px`;
+           div.style.top = `${node.y}px`;
+           div.style.width = `${node.width}px`;
+           div.style.height = `${node.height}px`;
+
+
+           div.addEventListener('mousedown', (e) => onNodeBlockMouseDown(e, node.id));
+           div.addEventListener('click', (e) => { e.stopPropagation(); selectNode(node.id); });
+
+
+           // Header block bar
+           const header = document.createElement('div');
+           header.className = 'component-header';
+           header.id = `${node.id}_header_title`;
+           header.innerText = node.customLabel;
+           div.appendChild(header);
+
+
+           // Body Area block context
+           const body = document.createElement('div');
+           body.className = 'component-body';
+          
+           // Customize internal body content layout structure based on node signatures
+           if (node.type === 'SWITCH') {
+               body.innerHTML = `<div class="switch-toggle-node" id="${node.id}_sw" onclick="toggleSwitchState('${node.id}', event)"></div>`;
+           } else if (node.type === 'BUTTON') {
+               body.innerHTML = `<div class="push-button-node" onmousedown="setButtonState('${node.id}', true)" onmouseup="setButtonState('${node.id}', false)" onmouseleave="setButtonState('${node.id}', false)"></div>`;
+           } else if (node.type === 'LED') {
+               body.innerHTML = `<div class="led-indicator-node" id="${node.id}_led"></div>`;
+           } else if (node.type === 'SEGMENT_7') {
+               body.innerHTML = `<div class="seven-segment-wrapper"><div class="seven-segment-digit" id="${node.id}_7seg">0</div></div>`;
+           }
+           else if (node.type === 'ASSEMBLER') {body.innerHTML = `<div style="width:100%;height:100%; display:flex; flex-direction:column; gap:5px; font-family:monospace;"> <div style="color:var(--accent-neon); font-size:11px; font-weight:bold;">ASM</div> <div style=" color:var(--text-muted); font-size:9px; ">12-BIT ADDRESS</div> <div id="${node.id}_asm_address"style=" color:var(--logic-high); font-size:12px; font-weight:bold;">000</div>
+
+            <div style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:3px;
+                font-size:8px;
+                color:var(--text-muted);
+            ">
+                <span>OPCODE</span>
+                <span>BYTE 1</span>
+                <span>BYTE 2</span>
+                <span>BYTE 3</span>
+            </div>
+
+            <div id="${node.id}_asm_output"
+                 style="
+                    font-family:monospace;
+                    font-size:11px;
+                    color:var(--text-main);
+                 ">
+                00 00 00 00
+            </div>
+
+        </div>
+    `;
+}
+           else {
+               body.innerHTML = `<div class="component-label">${node.type}</div>`;
+           }
+           div.appendChild(body);
+
+
+           // Map and calculate placement positions of standard routing ports layout mapping
+           // Inputs array spacing distribution calculation
+if (spec.inputs.length > 0) {
+
+    const spacing =
+        node.height / (spec.inputs.length + 1);
+
+    spec.inputs.forEach((portName, idx) => {
+
+        const topPos =
+            spacing * (idx + 1) - 6;
+
+        const portDiv =
+            document.createElement('div');
+
+        portDiv.className =
+            'terminal-port input';
+
+        portDiv.id =
+            `${node.id}_p_in_${portName}`;
+
+        portDiv.style.left =
+            '-6px';
+
+        portDiv.style.top =
+            `${topPos}px`;
+
+        portDiv.addEventListener(
+            'mousedown',
+            (e) => startWireDrag(
+                node.id,
+                'in',
+                portName,
+                e
+            )
+        );
+
+        portDiv.addEventListener(
+            'mouseup',
+            (e) => finishWireDrag(
+                node.id,
+                'in',
+                portName,
+                e
+            )
+        );
+
+
+        const tag =
+            document.createElement('span');
+
+        tag.className =
+            'port-tag';
+
+        tag.style.left =
+            '10px';
+
+        tag.style.top =
+            '-2px';
+
+        tag.innerText =
+            portName.toUpperCase();
+
+        portDiv.appendChild(tag);
+
+        div.appendChild(portDiv);
+
+    });
+}
+
+
+           // Outputs array spacing distribution calculation
+           if (spec.outputs.length > 0) {
+               const spacing = node.height / (spec.outputs.length + 1);
+               spec.outputs.forEach((portName, idx) => {
+                   const topPos = spacing * (idx + 1) - 6;
+                   const portDiv = document.createElement('div');
+                   portDiv.className = 'terminal-port output';
+                   portDiv.id = `${node.id}_p_out_${portName}`;
+                   portDiv.style.right = '-6px';
+                   portDiv.style.top = `${topPos}px`;
+portDiv.addEventListener('mousedown', (e) => {
+    startWireDrag(node.id, 'out', portName, e);
+});
+
+portDiv.addEventListener('mouseup', (e) => {
+    finishWireDrag(node.id, 'out', portName, e);
+});
+
+                   const tag = document.createElement('span');
+                   tag.className = 'port-tag';
+                   tag.style.right = '10px';
+                   tag.style.top = '-2px';
+                   tag.innerText = portName.toUpperCase();
+                   portDiv.appendChild(tag);
+                   div.appendChild(portDiv);
+               });
+           }
+
+
+           document.getElementById('circuit-canvas').appendChild(div);
+       }
+
+
+       // Draggable Core Block Framework
+       function onNodeBlockMouseDown(e, id) {
+           if (e.target.classList.contains('terminal-port') || e.target.classList.contains('switch-toggle-node') || e.target.classList.contains('push-button-node')) return;
+           e.stopPropagation();
+           selectNode(id);
+
+
+           let node = studioState.nodes[id];
+           let startX = e.clientX;
+           let startY = e.clientY;
+           let initialNodeX = node.x;
+           let initialNodeY = node.y;
+
+
+           function onNodeMouseMove(moveEvent) {
+               let dx = moveEvent.clientX - startX;
+               let dy = moveEvent.clientY - startY;
+               node.x = snapToGrid(initialNodeX + dx);
+               node.y = snapToGrid(initialNodeY + dy);
+              
+               const element = document.getElementById(id);
+               if (element) {
+                   element.style.left = `${node.x}px`;
+                   element.style.top = `${node.y}px`;
+               }
+               redrawCircuitWires();
+           }
+
+
+function onNodeMouseUp() {
+
+    document.removeEventListener(
+        'mousemove',
+        onNodeMouseMove
+    );
+
+    document.removeEventListener(
+        'mouseup',
+        onNodeMouseUp
+    );
+
+    broadcastCircuitState();
+}
+
+
+           document.addEventListener('mousemove', onNodeMouseMove);
+           document.addEventListener('mouseup', onNodeMouseUp);
+       }
+
+
+       // Selection manager
+       function selectNode(id) {
+           if (studioState.selectedNodeId) {
+               const prev = document.getElementById(studioState.selectedNodeId);
+               if (prev) prev.classList.remove('selected');
+           }
+           studioState.selectedNodeId = id;
+           if (id) {
+               const curr = document.getElementById(id);
+               if (curr) curr.classList.add('selected');
+           }
+           renderInspector();
+       }
+
+
+function onCanvasBackgroundClick(e) {
+
+    cancelWireDrag();
+
+    selectNode(null);
+}
+
+
+       // Interactive states update engines
+       function toggleSwitchState(id, ev) {
+           ev.stopPropagation();
+           let node = studioState.nodes[id];
+           node.currentInternalState = !node.currentInternalState;
+           node.outputs.out = node.currentInternalState;
+          
+           const swEl = document.getElementById(`${id}_sw`);
+           if (swEl) swEl.classList.toggle('active', node.currentInternalState);
+          
+           evaluateCircuitSimulation();
+
+
+broadcastCircuitState();
+       }
+
+
+       function setButtonState(id, isPressed) {
+           let node = studioState.nodes[id];
+           node.outputs.out = isPressed;
+           evaluateCircuitSimulation();
+       }
+
+
+       function startClockInterval(node) {
+           if (node.clockTimerId) clearInterval(node.clockTimerId);
+           node.clockTimerId = setInterval(() => {
+               node.currentInternalState = !node.currentInternalState;
+               node.outputs.out = node.currentInternalState;
+               evaluateCircuitSimulation();
+           }, node.properties.interval || 1000);
+       }
+
+
+/* =========================================================
+   DRAG-TO-WIRE SYSTEM
+   ========================================================= */
+
+let wireDragPosition = {
+    x: 0,
+    y: 0
+};
+
+
+/*
+    Get mouse position relative to the circuit canvas.
+*/
+function getCanvasMousePosition(event) {
+
+    const canvas =
+        document.getElementById('circuit-canvas');
+
+    const rect = canvas.getBoundingClientRect();
+
+    return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+    };
+}
+
+
+/*
+    Start dragging a wire from a port.
+*/
+function startWireDrag(nodeId, direction, portName, event) {
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    studioState.activeWiringSource = {
+        nodeId: nodeId,
+        direction: direction,
+        portName: portName
+    };
+
+    wireDragPosition = getCanvasMousePosition(event);
+
+    updateWireSourceVisual();
+
+    redrawCircuitWires();
+}
+
+
+/*
+    Finish dragging when released over another port.
+*/
+function finishWireDrag(nodeId, direction, portName, event) {
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const source = studioState.activeWiringSource;
+
+    if (!source) {
+        return;
+    }
+
+
+    // Cannot connect a port to itself.
+    if (
+        source.nodeId === nodeId &&
+        source.portName === portName &&
+        source.direction === direction
+    ) {
+
+        cancelWireDrag();
+        return;
+    }
+
+
+    // We need exactly one input and one output.
+    if (source.direction === direction) {
+
+        cancelWireDrag();
+        return;
+    }
+
+
+    let outputPort;
+    let inputPort;
+
+
+    if (source.direction === 'out' && direction === 'in') {
+
+        outputPort = source;
+        inputPort = {
+            nodeId: nodeId,
+            portName: portName
+        };
+
+    } else if (source.direction === 'in' && direction === 'out') {
+
+        outputPort = {
+            nodeId: nodeId,
+            portName: portName
+        };
+
+        inputPort = {
+            nodeId: source.nodeId,
+            portName: source.portName
+        };
+
+    } else {
+
+        cancelWireDrag();
+        return;
+    }
+
+
+    // Verify the nodes still exist.
+    const outputNode =
+        studioState.nodes[outputPort.nodeId];
+
+    const inputNode =
+        studioState.nodes[inputPort.nodeId];
+
+    if (!outputNode || !inputNode) {
+
+        cancelWireDrag();
+        return;
+    }
+
+
+    // Remove any existing wire connected to this input.
+    studioState.wires =
+        studioState.wires.filter(w =>
+            !(
+                w.to.nodeId === inputPort.nodeId &&
+                w.to.portName === inputPort.portName
+            )
+        );
+
+
+    // Create the new connection.
+    studioState.wires.push({
+
+        from: {
+            nodeId: outputPort.nodeId,
+            portName: outputPort.portName
+        },
+
+        to: {
+            nodeId: inputPort.nodeId,
+            portName: inputPort.portName
+        }
+
+    });
+
+
+    // End wire dragging.
+    studioState.activeWiringSource = null;
+
+    updateWireSourceVisual();
+
+evaluateCircuitSimulation();
+
+broadcastCircuitState();
+
+    
+}
+
+
+/*
+    Cancel the current wire.
+*/
+function cancelWireDrag() {
+
+    studioState.activeWiringSource = null;
+
+    updateWireSourceVisual();
+
+    redrawCircuitWires();
+}
+
+
+/*
+    Highlight the port where the drag started.
+*/
+function updateWireSourceVisual() {
+
+    document
+        .querySelectorAll('.terminal-port.wiring-source')
+        .forEach(port => {
+            port.classList.remove('wiring-source');
+        });
+
+
+    if (!studioState.activeWiringSource) {
+        return;
+    }
+
+
+    const source =
+        studioState.activeWiringSource;
+
+    const port = document.getElementById(
+        `${source.nodeId}_p_${source.direction}_${source.portName}`
+    );
+
+
+    if (port) {
+        port.classList.add('wiring-source');
+    }
+}
+
+/*
+    Move the temporary wire with the mouse.
+*/
+document.addEventListener('mousemove', (event) => {
+
+    if (!studioState.activeWiringSource) {
+        return;
+    }
+
+    wireDragPosition =
+        getCanvasMousePosition(event);
+
+    redrawCircuitWires();
+});
+
+
+/*
+    Releasing the mouse anywhere other than another
+    terminal cancels the wire.
+*/
+document.addEventListener('mouseup', (event) => {
+
+    if (!studioState.activeWiringSource) {
+        return;
+    }
+
+    // Valid terminal mouseup handlers call stopPropagation().
+    cancelWireDrag();
+});
+
+
+       // Render clean 90-degree orthogonal paths for Roblox structure visualization
+       function calculateOrthogonalWirePath(x1, y1, x2, y2) {
+           let midX = x1 + (x2 - x1) / 2;
+           return `M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`;
+       }
+
+
+function redrawCircuitWires() {
+
+    const svg =
+        document.getElementById('wire-svg-layer');
+
+    if (!svg) {
+        return;
+    }
+
+
+    let pathElements = "";
+
+
+    /*
+        Draw all completed wires.
+    */
+    studioState.wires.forEach(w => {
+
+        const outPortEl =
+            document.getElementById(
+                `${w.from.nodeId}_p_out_${w.from.portName}`
+            );
+
+        const inPortEl =
+            document.getElementById(
+                `${w.to.nodeId}_p_in_${w.to.portName}`
+            );
+
+
+        if (!outPortEl || !inPortEl) {
+            return;
+        }
+
+
+        const canvasRect =
+            document
+                .getElementById('circuit-canvas')
+                .getBoundingClientRect();
+
+        const r1 =
+            outPortEl.getBoundingClientRect();
+
+        const r2 =
+            inPortEl.getBoundingClientRect();
+
+
+        const x1 =
+            r1.left - canvasRect.left + 6;
+
+        const y1 =
+            r1.top - canvasRect.top + 6;
+
+        const x2 =
+            r2.left - canvasRect.left + 6;
+
+        const y2 =
+            r2.top - canvasRect.top + 6;
+
+
+        const active =
+            studioState.nodes[w.from.nodeId]
+                .outputs[w.from.portName];
+
+
+        const color =
+            active
+                ? 'var(--logic-high)'
+                : 'var(--wire-dim)';
+
+
+        const glow =
+            active
+                ? 'filter: drop-shadow(0px 0px 4px var(--logic-high-glow));'
+                : '';
+
+
+        pathElements += `
+            <path
+                d="${calculateOrthogonalWirePath(x1, y1, x2, y2)}"
+                stroke="${color}"
+                stroke-width="3"
+                fill="none"
+                style="${glow}"
+            />
+        `;
+    });
+
+
+    /*
+        Draw temporary wire while dragging.
+    */
+    if (studioState.activeWiringSource) {
+
+        const source =
+            studioState.activeWiringSource;
+
+
+        const sourcePort =
+            document.getElementById(
+                `${source.nodeId}_p_${source.direction}_${source.portName}`
+            );
+
+
+        if (sourcePort) {
+
+            const canvasRect =
+                document
+                    .getElementById('circuit-canvas')
+                    .getBoundingClientRect();
+
+            const sourceRect =
+                sourcePort.getBoundingClientRect();
+
+
+            const sourceX =
+                sourceRect.left -
+                canvasRect.left +
+                6;
+
+            const sourceY =
+                sourceRect.top -
+                canvasRect.top +
+                6;
+
+
+            const targetX =
+                wireDragPosition.x;
+
+            const targetY =
+                wireDragPosition.y;
+
+
+            /*
+                Use a normal orthogonal path.
+            */
+            const previewPath =
+                calculateOrthogonalWirePath(
+                    sourceX,
+                    sourceY,
+                    targetX,
+                    targetY
+                );
+
+
+            pathElements += `
+                <path
+                    d="${previewPath}"
+                    stroke="var(--accent-neon)"
+                    stroke-width="3"
+                    stroke-dasharray="8 6"
+                    fill="none"
+                    style="
+                        filter:
+                        drop-shadow(
+                            0 0 5px
+                            var(--accent-glow)
+                        );
+                    "
+                />
+            `;
+        }
+    }
+
+
+    svg.innerHTML = pathElements;
+}
+
+
+       // Logic Solver Simulator Loop
+       function evaluateCircuitSimulation() {
+           // Reset input arrays
+           for (let id in studioState.nodes) {
+               let n = studioState.nodes[id];
+               if (n.type !== 'HIGH' && n.type !== 'SWITCH' && n.type !== 'BUTTON' && n.type !== 'CLOCK') {
+                   for (let p in n.inputs) n.inputs[p] = false;
+               }
+           }
+
+
+           // Sync connection routing tables propagation mapping
+           studioState.wires.forEach(w => {
+               let sourceNode = studioState.nodes[w.from.nodeId];
+               let targetNode = studioState.nodes[w.to.nodeId];
+               if (sourceNode && targetNode) {
+                   targetNode.inputs[w.to.portName] = sourceNode.outputs[w.from.portName];
+               }
+           });
+
+
+           // Multi-pass structural evaluation cascade for sequential stabilization propagation latency
+           for (let loop = 0; loop < 3; loop++) {
+               for (let id in studioState.nodes) {
+                   executeNodeLogic(studioState.nodes[id]);
+               }
+               // Recascade values directly matching outputs
+               studioState.wires.forEach(w => {
+                   let sourceNode = studioState.nodes[w.from.nodeId];
+                   let targetNode = studioState.nodes[w.to.nodeId];
+                   if (sourceNode && targetNode) {
+                       targetNode.inputs[w.to.portName] = sourceNode.outputs[w.from.portName];
+                   }
+               });
+           }
+
+
+           // Sync structural UI element layers updates
+           updateHardwareUIComponents();
+           redrawCircuitWires();
+       }
+
+
+       function executeNodeLogic(node) {
+           let i = node.inputs;
+           let o = node.outputs;
+
+
+           switch (node.type) {
+               case 'NOT':  o.out = !i.in; break;
+               case 'AND':  o.out = i.in1 && i.in2; break;
+               case 'OR':   o.out = i.in1 || i.in2; break;
+               case 'NAND': o.out = !(i.in1 && i.in2); break;
+               case 'NOR':  o.out = !(i.in1 || i.in2); break;
+               case 'XOR':  o.out = i.in1 !== i.in2; break;
+               case 'XNOR': o.out = i.in1 === i.in2; break;
+              
+               case 'T_FF': {
+                   let clk = i.clk;
+                   if (clk && !node.lastClkValue) { // Rising edge trigger mechanism
+                       if (i.t) {
+                           node.currentInternalState = !node.currentInternalState;
+                       }
+                   }
+                   node.lastClkValue = clk;
+                   o.q = node.currentInternalState;
+                   o.q_bar = !node.currentInternalState;
+                   break;
+               }
+               case 'D_FF': {
+                   let clk = i.clk;
+                   if (clk && !node.lastClkValue) { // Rising edge trigger mechanism
+                       node.currentInternalState = i.d;
+                   }
+                   node.lastClkValue = clk;
+                   o.q = node.currentInternalState;
+                   o.q_bar = !node.currentInternalState;
+                   break;
+               }
+               case 'COUNTER_4BIT': {
+                   if (i.rst) {
+                       node.counterValue = 0;
+                   } else if (i.clk && !node.lastClkValue) { // Rising edge step trigger
+                       node.counterValue = (node.counterValue + 1) % 16;
+                   }
+                   node.lastClkValue = i.clk;
+                   o.q0 = (node.counterValue & 1) === 1;
+                   o.q1 = ((node.counterValue >> 1) & 1) === 1;
+                   o.q2 = ((node.counterValue >> 2) & 1) === 1;
+                   o.q3 = ((node.counterValue >> 3) & 1) === 1;
+                   break;
+               }
+               case 'SEGMENT_7': {
+                   let value = 0;
+                   if (i.d0) value += 1;
+                   if (i.d1) value += 2;
+                   if (i.d2) value += 4;
+                   if (i.d3) value += 8;
+                   node.counterValue = value; // Store integer representation computed inside segment matrix
+                   break;
+               }
+case 'ASSEMBLER': {
+
+    const address =
+        getAssemblerAddress(node);
+
+
+    try {
+
+        const program =
+            parseAssemblerProgram(node);
+
+
+        const instruction =
+            program[address] || {
+                opcode: 0,
+                byte1: 0,
+                byte2: 0,
+                byte3: 0
+            };
+
+
+        const opcodeBits =
+            byteToBits(
+                instruction.opcode
+            );
+
+
+        const byte1Bits =
+            byteToBits(
+                instruction.byte1
+            );
+
+
+        const byte2Bits =
+            byteToBits(
+                instruction.byte2
+            );
+
+
+        const byte3Bits =
+            byteToBits(
+                instruction.byte3
+            );
+
+
+        for (let i = 0; i < 8; i++) {
+
+            node.outputs[`opcode${i}`] =
+                opcodeBits[i];
+
+            node.outputs[`byte1${i}`] =
+                byte1Bits[i];
+
+            node.outputs[`byte2${i}`] =
+                byte2Bits[i];
+
+            node.outputs[`byte3${i}`] =
+                byte3Bits[i];
+        }
+
+
+        node.assemblerCurrent =
+            instruction;
+
+        node.assemblerError =
+            null;
+
+    } catch (error) {
+
+        node.assemblerError =
+            error.message;
+
+        for (const p in node.outputs) {
+            node.outputs[p] = false;
+        }
+    }
+
+    break;
+}
+           }
+       }
+
+
+       function updateHardwareUIComponents() {
+           for (let id in studioState.nodes) {
+               let node = studioState.nodes[id];
+              
+               // Colorize connection terminals dynamically
+               COMPONENT_SPECS[node.type].inputs.forEach(p => {
+                   const el = document.getElementById(`${id}_p_in_${p}`);
+                   if (el) {
+                       el.classList.toggle('high', !!node.inputs[p]);
+                       el.classList.toggle('low', !node.inputs[p]);
+                   }
+               });
+               COMPONENT_SPECS[node.type].outputs.forEach(p => {
+                   const el = document.getElementById(`${id}_p_out_${p}`);
+                   if (el) {
+                       el.classList.toggle('high', !!node.outputs[p]);
+                       el.classList.toggle('low', !node.outputs[p]);
+                   }
+               });
+
+
+               // Update customized component block interfaces context markup layers
+               if (node.type === 'LED') {
+                   const led = document.getElementById(`${id}_led`);
+                   if (led) led.classList.toggle('active', !!node.inputs.in);
+               } else if (node.type === 'SEGMENT_7') {
+                   const seg = document.getElementById(`${id}_7seg`);
+                   if (seg) {
+                       seg.innerText = node.counterValue.toString(16).toUpperCase();
+                       seg.classList.toggle('active', node.counterValue > 0);
+                   }
+               }
+           }
+       }
+
+
+       // Inspector View Property Rendering Frame
+       function renderInspector() {
+           const container = document.getElementById('inspector-content');
+           if (!studioState.selectedNodeId) {
+               container.innerHTML = `<div class="empty-inspector-state">Select a node block component to inspect properties.</div>`;
+               return;
+           }
+
+
+           const node = studioState.nodes[studioState.selectedNodeId];
+           let html = `
+               <div class="property-group">
+                   <div class="property-label">Component ID</div>
+                   <div class="property-value">${node.id}</div>
+               </div>
+               <div class="property-group">
+                   <div class="property-label">Type Mapping</div>
+                   <div class="property-value">${node.type}</div>
+               </div>
+               <div class="property-group">
+                   <div class="property-label">Name Label</div>
+                   <input type="text" class="input-box" value="${node.customLabel}" oninput="updateNodeLabel('${node.id}', this.value)">
+               </div>
+           `;
+
+
+           if (node.type === 'CLOCK') {
+               html += `
+                   <div class="property-group">
+                       <div class="property-label">Pulse Interval (ms)</div>
+                       <input type="number" class="input-box" value="${node.properties.interval}" onchange="updateClockInterval('${node.id}', this.value)">
+                   </div>
+               `;
+           }
+
+           if (node.type === 'ASSEMBLER') {
+
+    html += `
+
+        <div class="property-group">
+
+            <div class="property-label">
+                INSTRUCTION SET
+            </div>
+
+            <div style="
+                display:flex;
+                gap:5px;
+            ">
+
+                <input
+                    type="text"
+                    id="${node.id}_opcode_name"
+                    class="input-box"
+                    placeholder="Instruction"
+                >
+
+                <input
+                    type="number"
+                    id="${node.id}_opcode_number"
+                    class="input-box"
+                    placeholder="Opcode"
+                    min="0"
+                    max="255"
+                >
+
+            </div>
+
+            <button
+                class="btn"
+                style="justify-content:center;"
+                onclick="addAssemblerInstruction('${node.id}')"
+            >
+                Add Instruction
+            </button>
+
+        </div>
+
+
+        <div class="property-group">
+
+            <div class="property-label">
+                INSTRUCTIONS
+            </div>
+
+            <div
+                id="${node.id}_instruction_list"
+                style="
+                    display:flex;
+                    flex-direction:column;
+                    gap:4px;
+                    max-height:130px;
+                    overflow-y:auto;
+                "
+            >
+                ${renderAssemblerInstructionList(node)}
+            </div>
+
+        </div>
+
+
+        <div class="property-group">
+
+            <div class="property-label">
+                ASSEMBLY PROGRAM
+            </div>
+
+            <textarea
+                id="${node.id}_assembly_code"
+                spellcheck="false"
+                style="
+                    width:100%;
+                    min-height:220px;
+                    resize:vertical;
+                    background:#0b0c12;
+                    color:#39ff14;
+                    border:1px solid var(--panel-border);
+                    border-radius:6px;
+                    padding:10px;
+                    font-family:monospace;
+                    font-size:12px;
+                    outline:none;
+                "
+                oninput="updateAssemblerProgram('${node.id}', this.value)"
+            >${escapeHtml(node.properties.program || '')}</textarea>
+
+        </div>
+
+    `;
+}
+
+
+           html += `
+               <button class="btn danger" style="margin-top: 15px; width: 100%; justify-content: center; background-color: #2b1619; border-color: #542327;" onclick="deleteSelectedNode()">
+                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                   Delete Block
+               </button>
+           `;
+
+
+           container.innerHTML = html;
+       }
+
+
+       function updateNodeLabel(id, text) {
+           let node = studioState.nodes[id];
+           node.customLabel = text;
+           const titleEl = document.getElementById(`${id}_header_title`);
+           if (titleEl) titleEl.innerText = text;
+           broadcastCircuitState();
+       }
+
+
+       function updateClockInterval(id, val) {
+           let node = studioState.nodes[id];
+           node.properties.interval = Math.max(50, parseInt(val) || 1000);
+           startClockInterval(node);
+
+broadcastCircuitState();
+       }
+
+
+       function deleteSelectedNode() {
+           const id = studioState.selectedNodeId;
+           if (!id) return;
+
+
+           let node = studioState.nodes[id];
+           if (node.clockTimerId) clearInterval(node.clockTimerId);
+
+
+           // Strip active connections targeting or derived from this target mapping
+           studioState.wires = studioState.wires.filter(w => w.from.nodeId !== id && w.to.nodeId !== id);
+          
+           const element = document.getElementById(id);
+           if (element) element.remove();
+          
+           delete studioState.nodes[id];
+           selectNode(null);
+
+           evaluateCircuitSimulation();
+
+broadcastCircuitState();
+       }
+
+
+function clearWorkspace() {
+
+    for (let id in studioState.nodes) {
+
+        const node = studioState.nodes[id];
+
+        if (node.clockTimerId) {
+            clearInterval(node.clockTimerId);
+        }
+
+        const element = document.getElementById(id);
+
+        if (element) {
+            element.remove();
+        }
+    }
+
+    studioState.nodes = {};
+    studioState.wires = [];
+    studioState.selectedNodeId = null;
+    studioState.activeWiringSource = null;
+    studioState.nodeCounter = 0;
+
+    selectNode(null);
+    evaluateCircuitSimulation();
+
+broadcastCircuitState();
+}
+
+
+       function filterPalette() {
+           const query = document.getElementById('search-box').value.toLowerCase();
+           const items = document.querySelectorAll('.palette-item');
+           items.forEach(item => {
+               const txt = item.innerText.toLowerCase();
+               item.style.display = txt.includes(query) ? 'flex' : 'none';
+           });
+       }
+
+/* =========================================================
+   CIRCUIT MAKER 2 FILE SYSTEM
+   .CM2 SAVE / LOAD
+   ========================================================= */
+
+const CM2_FILE_VERSION = 1;
+
+/*
+    Creates a clean object specifically for saving.
+
+    Runtime-only values such as:
+    - clockTimerId
+    are intentionally excluded.
+*/
+function buildSaveData() {
+
+    const savedNodes = {};
+
+    for (const id in studioState.nodes) {
+
+        const node = studioState.nodes[id];
+
+        savedNodes[id] = {
+            id: node.id,
+            type: node.type,
+
+            x: node.x,
+            y: node.y,
+
+            width: node.width,
+            height: node.height,
+
+            inputs: { ...node.inputs },
+            outputs: { ...node.outputs },
+
+            properties: JSON.parse(
+                JSON.stringify(node.properties || {})
+            ),
+
+            customLabel: node.customLabel,
+
+            // Sequential component state
+            lastClkValue: !!node.lastClkValue,
+            currentInternalState: !!node.currentInternalState,
+            counterValue: Number(node.counterValue || 0)
+        };
+    }
+
+    return {
+        format: "Circuit Maker 2",
+        fileType: "CM2",
+        version: CM2_FILE_VERSION,
+
+        savedAt: new Date().toISOString(),
+
+        nodeCounter: studioState.nodeCounter,
+
+        nodes: savedNodes,
+
+        wires: studioState.wires.map(w => ({
+            from: {
+                nodeId: w.from.nodeId,
+                portName: w.from.portName
+            },
+            to: {
+                nodeId: w.to.nodeId,
+                portName: w.to.portName
+            }
+        }))
+    };
+}
+
+
+/*
+    SAVE
+    Downloads the current circuit as a .cm2 file.
+*/
+async function saveCircuit() {
+
+    const saveData = buildSaveData();
+
+    const json = JSON.stringify(saveData, null, 2);
+
+    // Use the native "Save As" dialog when supported.
+    if ("showSaveFilePicker" in window) {
+
+        try {
+
+            const fileHandle = await window.showSaveFilePicker({
+                suggestedName: "MyCircuit.cm2",
+
+                types: [
+                    {
+                        description: "Circuit Maker 2 Project",
+                        accept: {
+                            "application/octet-stream": [".cm2"]
+                        }
+                    }
+                ]
+            });
+
+            const writable = await fileHandle.createWritable();
+
+            await writable.write(json);
+
+            await writable.close();
+
+            console.log("Circuit saved successfully.");
+
+        } catch (error) {
+
+            // User pressed Cancel
+            if (error.name === "AbortError") {
+                return;
+            }
+
+            console.error("Save Error:", error);
+
+            alert(
+                "The circuit could not be saved.\n\n" +
+                error.message
+            );
+        }
+
+    } else {
+
+        // Fallback for browsers that don't support showSaveFilePicker
+        const blob = new Blob(
+            [json],
+            { type: "application/octet-stream" }
+        );
+
+        const url = URL.createObjectURL(blob);
+
+        const downloadLink = document.createElement("a");
+
+        downloadLink.href = url;
+        downloadLink.download = "MyCircuit.cm2";
+
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        downloadLink.remove();
+
+        URL.revokeObjectURL(url);
+    }
+}
+
+
+/*
+    Opens the hidden file picker.
+*/
+function openLoadDialog() {
+
+    const fileInput = document.getElementById("cm2-file-input");
+
+    // Reset the picker so selecting the same file twice still works.
+    fileInput.value = "";
+
+    fileInput.click();
+}
+
+
+/*
+    Reads the selected .cm2 file.
+*/
+function loadCircuitFile(event) {
+
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+
+        try {
+
+            const text = e.target.result;
+
+            const saveData = JSON.parse(text);
+
+            loadCircuitData(saveData);
+
+        } catch (error) {
+
+            console.error("CM2 Load Error:", error);
+
+            alert(
+                "This file could not be loaded.\n\n" +
+                "The file may be corrupted or is not a valid .cm2 project."
+            );
+        }
+    };
+
+    reader.onerror = function() {
+
+        alert("Could not read the selected file.");
+
+    };
+
+    reader.readAsText(file);
+}
+
+
+/*
+    Validates and restores a CM2 project.
+*/
+function loadCircuitData(saveData) {
+
+    // -----------------------------------------------------
+    // Basic file validation
+    // -----------------------------------------------------
+
+    if (!saveData || typeof saveData !== "object") {
+        throw new Error("Invalid CM2 file.");
+    }
+
+    if (saveData.fileType !== "CM2") {
+        throw new Error("Not a CM2 project file.");
+    }
+
+    if (!saveData.version) {
+        throw new Error("Missing CM2 version.");
+    }
+
+    if (!saveData.nodes || typeof saveData.nodes !== "object") {
+        throw new Error("CM2 file contains no node data.");
+    }
+
+    if (!Array.isArray(saveData.wires)) {
+        throw new Error("CM2 file contains invalid wire data.");
+    }
+
+
+    // -----------------------------------------------------
+    // Stop existing clocks
+    // -----------------------------------------------------
+
+    for (const id in studioState.nodes) {
+
+        const node = studioState.nodes[id];
+
+        if (node.clockTimerId) {
+            clearInterval(node.clockTimerId);
+        }
+    }
+
+
+    // -----------------------------------------------------
+    // Clear current workspace
+    // -----------------------------------------------------
+
+    for (const id in studioState.nodes) {
+
+        const element = document.getElementById(id);
+
+        if (element) {
+            element.remove();
+        }
+    }
+
+
+    // -----------------------------------------------------
+    // Reset studio state
+    // -----------------------------------------------------
+
+    studioState.nodes = {};
+    studioState.wires = [];
+    studioState.selectedNodeId = null;
+    studioState.activeWiringSource = null;
+
+    studioState.nodeCounter =
+        Number(saveData.nodeCounter || 0);
+
+
+    // -----------------------------------------------------
+    // Restore nodes
+    // -----------------------------------------------------
+
+    for (const id in saveData.nodes) {
+
+        const savedNode = saveData.nodes[id];
+
+        if (!COMPONENT_SPECS[savedNode.type]) {
+            console.warn(
+                "Skipping unknown component:",
+                savedNode.type
+            );
+
+            continue;
+        }
+
+        const spec = COMPONENT_SPECS[savedNode.type];
+
+        const nodeObj = {
+
+            id: savedNode.id || id,
+
+            type: savedNode.type,
+
+            x: Number(savedNode.x) || 0,
+            y: Number(savedNode.y) || 0,
+
+            width: Number(savedNode.width) || spec.width,
+            height: Number(savedNode.height) || spec.height,
+
+            inputs: {},
+            outputs: {},
+
+            properties:
+                JSON.parse(
+                    JSON.stringify(
+                        savedNode.properties || spec.defaultProps || {}
+                    )
+                ),
+
+            customLabel:
+                savedNode.customLabel || spec.title,
+
+            lastClkValue:
+                !!savedNode.lastClkValue,
+
+            currentInternalState:
+                !!savedNode.currentInternalState,
+
+            counterValue:
+                Number(savedNode.counterValue || 0)
+        };
+
+
+        // Restore inputs
+
+        spec.inputs.forEach(port => {
+
+            nodeObj.inputs[port] =
+                !!(
+                    savedNode.inputs &&
+                    savedNode.inputs[port]
+                );
+
+        });
+
+
+        // Restore outputs
+
+        spec.outputs.forEach(port => {
+
+            nodeObj.outputs[port] =
+                !!(
+                    savedNode.outputs &&
+                    savedNode.outputs[port]
+                );
+
+        });
+
+
+        // Ensure HIGH always starts high
+
+        if (nodeObj.type === "HIGH") {
+            nodeObj.outputs.out = true;
+        }
+
+
+        studioState.nodes[nodeObj.id] = nodeObj;
+
+
+        // Recreate component DOM
+
+        renderNodeToDOM(nodeObj);
+
+
+        // Restore switch visual state
+
+        if (nodeObj.type === "SWITCH") {
+
+            const sw =
+                document.getElementById(
+                    `${nodeObj.id}_sw`
+                );
+
+            if (sw) {
+                sw.classList.toggle(
+                    "active",
+                    nodeObj.currentInternalState
+                );
+            }
+        }
+    }
+
+
+    // -----------------------------------------------------
+    // Restore wires
+    // -----------------------------------------------------
+
+    studioState.wires =
+        saveData.wires.filter(w => {
+
+            if (!w || !w.from || !w.to) {
+                return false;
+            }
+
+            const sourceNode =
+                studioState.nodes[w.from.nodeId];
+
+            const targetNode =
+                studioState.nodes[w.to.nodeId];
+
+            if (!sourceNode || !targetNode) {
+                return false;
+            }
+
+            if (
+                !COMPONENT_SPECS[sourceNode.type].outputs.includes(
+                    w.from.portName
+                )
+            ) {
+                return false;
+            }
+
+            if (
+                !COMPONENT_SPECS[targetNode.type].inputs.includes(
+                    w.to.portName
+                )
+            ) {
+                return false;
+            }
+
+            return true;
+        }).map(w => ({
+
+            from: {
+                nodeId: w.from.nodeId,
+                portName: w.from.portName
+            },
+
+            to: {
+                nodeId: w.to.nodeId,
+                portName: w.to.portName
+            }
+
+        }));
+
+
+    // -----------------------------------------------------
+    // Restart clock generators
+    // -----------------------------------------------------
+
+    for (const id in studioState.nodes) {
+
+        const node = studioState.nodes[id];
+
+        if (node.type === "CLOCK") {
+            startClockInterval(node);
+        }
+    }
+
+
+    // -----------------------------------------------------
+    // Restore simulation
+    // -----------------------------------------------------
+
+    evaluateCircuitSimulation();
+
+    selectNode(null);
+
+
+    console.log(
+        `Loaded CM2 project with ${
+            Object.keys(studioState.nodes).length
+        } nodes and ${
+            studioState.wires.length
+        } wires.`
+    );
+}
+
+/* =========================================================
+   ASSEMBLER ENGINE
+   ========================================================= */
+
+function parseAssemblerProgram(node) {
+
+    const program =
+        node.properties.program || "";
+
+    const instructions =
+        node.properties.instructions || {};
+
+    const lines =
+        program.split(/\r?\n/);
+
+    const assembled = [];
+
+
+    for (let lineIndex = 0;
+         lineIndex < lines.length;
+         lineIndex++) {
+
+        let line =
+            lines[lineIndex].trim();
+
+
+        // Remove comments
+        line =
+            line.split(';')[0].trim();
+
+
+        // Ignore empty lines
+        if (!line) {
+            continue;
+        }
+
+
+        const parts =
+            line.split(/\s+/);
+
+
+        const mnemonic =
+            parts[0].toUpperCase();
+
+
+        /*
+            Find the opcode assigned to the mnemonic.
+        */
+        if (
+            instructions[mnemonic] === undefined
+        ) {
+
+            throw new Error(
+                `Unknown instruction "${mnemonic}" on line ${lineIndex + 1}`
+            );
+        }
+
+
+        const opcode =
+            clampByte(
+                instructions[mnemonic]
+            );
+
+
+        const byte1 =
+            parseAssemblyByte(parts[1]);
+
+
+        const byte2 =
+            parseAssemblyByte(parts[2]);
+
+
+        const byte3 =
+            parseAssemblyByte(parts[3]);
+
+
+        assembled.push({
+            opcode: opcode,
+            byte1: byte1,
+            byte2: byte2,
+            byte3: byte3
+        });
+    }
+
+
+    return assembled;
+}
+
+function clampByte(value) {
+
+    value =
+        Number(value);
+
+    if (!Number.isFinite(value)) {
+        return 0;
+    }
+
+    return Math.max(
+        0,
+        Math.min(
+            255,
+            Math.floor(value)
+        )
+    );
+}
+
+
+function parseAssemblyByte(value) {
+
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return 0;
+    }
+
+
+    const text =
+        String(value)
+            .trim()
+            .toUpperCase();
+
+
+    /*
+        Hex:
+        FF
+        0xFF
+    */
+    if (
+        text.startsWith("0X")
+    ) {
+
+        return clampByte(
+            parseInt(
+                text.substring(2),
+                16
+            )
+        );
+    }
+
+
+    /*
+        Binary:
+        10101010
+        0b10101010
+    */
+    if (
+        text.startsWith("0B")
+    ) {
+
+        return clampByte(
+            parseInt(
+                text.substring(2),
+                2
+            )
+        );
+    }
+
+
+    /*
+        Decimal
+    */
+    return clampByte(
+        parseInt(text, 10)
+    );
+}
+
+function getAssemblerAddress(node) {
+
+    let address = 0;
+
+
+    for (let bit = 0; bit < 12; bit++) {
+
+        if (node.inputs[`a${bit}`]) {
+
+            address |=
+                (1 << bit);
+        }
+    }
+
+
+    return address;
+}
+
+function byteToBits(value) {
+
+    value =
+        clampByte(value);
+
+    const bits = [];
+
+    for (let i = 0; i < 8; i++) {
+
+        bits.push(
+            ((value >> i) & 1) === 1
+        );
+    }
+
+    return bits;
+}
+
+function addAssemblerInstruction(id) {
+
+    const node =
+        studioState.nodes[id];
+
+    if (!node) return;
+
+
+    const name =
+        document
+            .getElementById(`${id}_opcode_name`)
+            .value
+            .trim()
+            .toUpperCase();
+
+
+    const number =
+        parseInt(
+            document
+                .getElementById(`${id}_opcode_number`)
+                .value,
+            10
+        );
+
+
+    if (!name) {
+
+        alert("Enter an instruction name.");
+
+        return;
+    }
+
+
+    if (
+        !Number.isInteger(number) ||
+        number < 0 ||
+        number > 255
+    ) {
+
+        alert(
+            "Opcode must be between 0 and 255."
+        );
+
+        return;
+    }
+
+
+    node.properties.instructions[name] =
+        number;
+
+
+    renderInspector();
+
+    evaluateCircuitSimulation();
+    broadcastCircuitState();
+}
+
+function removeAssemblerInstruction(
+    id,
+    instruction
+) {
+
+    const node =
+        studioState.nodes[id];
+
+    if (!node) return;
+
+
+    delete node.properties.instructions[
+        instruction
+    ];
+
+
+    renderInspector();
+
+    evaluateCircuitSimulation();
+    broadcastCircuitState();
+}
+
+function renderAssemblerInstructionList(node) {
+
+    const instructions =
+        node.properties.instructions || {};
+
+
+    const keys =
+        Object.keys(instructions);
+
+
+    if (keys.length === 0) {
+
+        return `
+            <div style="
+                color:var(--text-muted);
+                font-size:11px;
+            ">
+                No instructions defined.
+            </div>
+        `;
+    }
+
+
+    return keys.map(name => {
+
+        return `
+            <div style="
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                background:#0b0c12;
+                padding:5px 7px;
+                border:1px solid var(--panel-border);
+                border-radius:4px;
+                font-family:monospace;
+                font-size:11px;
+            ">
+
+                <span>
+                    ${escapeHtml(name)}
+                    =
+                    ${instructions[name]}
+                </span>
+
+                <button
+                    onclick="
+                        removeAssemblerInstruction(
+                            '${node.id}',
+                            '${escapeJs(name)}'
+                        )
+                    "
+                    style="
+                        background:none;
+                        border:0;
+                        color:#ff3131;
+                        cursor:pointer;
+                    "
+                >
+                    ×
+                </button>
+
+            </div>
+        `;
+
+    }).join('');
+}
+
+function updateAssemblerProgram(
+    id,
+    program
+) {
+
+    const node =
+        studioState.nodes[id];
+
+    if (!node) return;
+
+
+    node.properties.program =
+        program;
+
+
+    evaluateCircuitSimulation();
+    broadcastCircuitState();
+}
+
+function escapeHtml(text) {
+
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+
+function escapeJs(text) {
+
+    return String(text)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'");
+}
+
+
+/* =========================================================
+   PREMADE SCHEMATICS SYSTEM
+   ========================================================= */
+
+let premadeSchematics = [];
+
+
+/*
+    Load the list of available schematics.
+*/
+async function loadPremadeSchematics() {
+
+    const container =
+        document.getElementById(
+            'premade-schematics-list'
+        );
+
+    if (!container) return;
+
+
+    try {
+
+        const response =
+            await fetch('schematics/index.json', {
+                cache: 'no-store'
+            });
+
+
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.schematics ||
+            !Array.isArray(data.schematics)) {
+
+            throw new Error(
+                'Invalid schematic index.'
+            );
+        }
+
+
+        premadeSchematics =
+            data.schematics;
+
+
+        renderPremadeSchematics();
+
+
+    } catch (error) {
+
+        console.error(
+            'Could not load premade schematics:',
+            error
+        );
+
+
+        container.innerHTML = `
+            <div style="
+                grid-column:1/-1;
+                color:var(--logic-low);
+                font-size:11px;
+                text-align:center;
+                padding:10px;
+            ">
+                Failed to load schematics
+            </div>
+        `;
+    }
+}
+
+
+function renderPremadeSchematics() {
+
+    const container =
+        document.getElementById(
+            'premade-schematics-list'
+        );
+
+    if (!container) return;
+
+
+    container.innerHTML = '';
+
+
+    if (premadeSchematics.length === 0) {
+
+        container.innerHTML = `
+            <div style="
+                grid-column:1/-1;
+                color:var(--text-muted);
+                font-size:11px;
+                text-align:center;
+                padding:10px;
+            ">
+                No schematics installed
+            </div>
+        `;
+
+        return;
+    }
+
+
+    premadeSchematics.forEach((schematic, index) => {
+
+        const item =
+            document.createElement('div');
+
+        item.className =
+            'palette-item';
+
+        item.draggable = true;
+
+
+        item.innerHTML = `
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2">
+
+                <rect
+                    x="3"
+                    y="4"
+                    width="18"
+                    height="16"
+                    rx="2"
+                />
+
+                <path d="M7 9h10M7 13h6M7 17h4"/>
+            </svg>
+
+            <span>
+                ${escapeHtml(
+                    schematic.name ||
+                    `Schematic ${index + 1}`
+                )}
+            </span>
+        `;
+
+
+        item.addEventListener(
+            'dragstart',
+            (event) => {
+
+                event.dataTransfer.setData(
+                    'text/plain',
+                    `SCHEMATIC:${index}`
+                );
+            }
+        );
+
+
+        container.appendChild(item);
+    });
+}
+
+
+async function insertPremadeSchematic(
+    schematic,
+    offsetX,
+    offsetY
+) {
+
+    try {
+
+        const response =
+            await fetch(
+                `schematics/${encodeURIComponent(
+                    schematic.file
+                )}`,
+                {
+                    cache: 'no-store'
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
+
+
+        const schematicData =
+            await response.json();
+
+
+        validateCM2Data(
+            schematicData
+        );
+
+
+        importSchematicData(
+            schematicData,
+            offsetX,
+            offsetY
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            'Schematic import failed:',
+            error
+        );
+
+
+        alert(
+            `Could not load schematic "${schematic.name}".\n\n` +
+            error.message
+        );
+    }
+}
+
+
+function validateCM2Data(data) {
+
+    if (!data ||
+        typeof data !== 'object') {
+
+        throw new Error(
+            'Invalid schematic file.'
+        );
+    }
+
+
+    if (data.fileType !== 'CM2') {
+
+        throw new Error(
+            'This is not a CM2 file.'
+        );
+    }
+
+
+    if (!data.nodes ||
+        typeof data.nodes !== 'object') {
+
+        throw new Error(
+            'The schematic contains no nodes.'
+        );
+    }
+
+
+    if (!Array.isArray(data.wires)) {
+
+        throw new Error(
+            'The schematic contains invalid wires.'
+        );
+    }
+}
+
+function importSchematicData(
+    data,
+    offsetX,
+    offsetY
+) {
+
+    const oldToNewIds = {};
+
+
+    /*
+        Find the top-left corner of the schematic.
+        This lets the entire schematic be positioned
+        naturally where it was dropped.
+    */
+
+    let minX = Infinity;
+    let minY = Infinity;
+
+
+    for (const oldId in data.nodes) {
+
+        const node =
+            data.nodes[oldId];
+
+
+        minX =
+            Math.min(
+                minX,
+                Number(node.x) || 0
+            );
+
+
+        minY =
+            Math.min(
+                minY,
+                Number(node.y) || 0
+            );
+    }
+
+
+    /*
+        Create copied nodes.
+    */
+
+    for (const oldId in data.nodes) {
+
+        const oldNode =
+            data.nodes[oldId];
+
+
+        if (!COMPONENT_SPECS[oldNode.type]) {
+            continue;
+        }
+
+
+        studioState.nodeCounter++;
+
+
+        const newId =
+            `node_${studioState.nodeCounter}`;
+
+
+        oldToNewIds[oldId] =
+            newId;
+
+
+        const spec =
+            COMPONENT_SPECS[oldNode.type];
+
+
+        const newNode = {
+
+            id: newId,
+
+            type: oldNode.type,
+
+
+            /*
+                Position relative to where the
+                schematic was dropped.
+            */
+
+            x:
+                offsetX +
+                ((Number(oldNode.x) || 0) - minX),
+
+            y:
+                offsetY +
+                ((Number(oldNode.y) || 0) - minY),
+
+
+            width:
+                Number(oldNode.width) ||
+                spec.width,
+
+            height:
+                Number(oldNode.height) ||
+                spec.height,
+
+
+            inputs: {},
+
+            outputs: {},
+
+
+            properties:
+                JSON.parse(
+                    JSON.stringify(
+                        oldNode.properties ||
+                        spec.defaultProps ||
+                        {}
+                    )
+                ),
+
+
+            customLabel:
+                oldNode.customLabel ||
+                spec.title,
+
+
+            lastClkValue:
+                !!oldNode.lastClkValue,
+
+
+            currentInternalState:
+                !!oldNode.currentInternalState,
+
+
+            counterValue:
+                Number(
+                    oldNode.counterValue ||
+                    0
+                )
+        };
+
+
+        /*
+            Restore input values.
+        */
+
+        spec.inputs.forEach(
+            port => {
+
+                newNode.inputs[port] =
+                    !!(
+                        oldNode.inputs &&
+                        oldNode.inputs[port]
+                    );
+            }
+        );
+
+
+        /*
+            Restore output values.
+        */
+
+        spec.outputs.forEach(
+            port => {
+
+                newNode.outputs[port] =
+                    !!(
+                        oldNode.outputs &&
+                        oldNode.outputs[port]
+                    );
+            }
+        );
+
+
+        if (newNode.type === 'HIGH') {
+            newNode.outputs.out = true;
+        }
+
+
+        studioState.nodes[newId] =
+            newNode;
+
+
+        renderNodeToDOM(
+            newNode
+        );
+
+
+        /*
+            Restore switch appearance.
+        */
+
+        if (
+            newNode.type === 'SWITCH'
+        ) {
+
+            const switchElement =
+                document.getElementById(
+                    `${newId}_sw`
+                );
+
+
+            if (switchElement) {
+
+                switchElement.classList.toggle(
+                    'active',
+                    newNode.currentInternalState
+                );
+            }
+        }
+
+
+        /*
+            Restart clocks inside the
+            imported schematic.
+        */
+
+        if (
+            newNode.type === 'CLOCK'
+        ) {
+
+            startClockInterval(
+                newNode
+            );
+        }
+    }
+
+
+    /*
+        Copy and remap every wire.
+    */
+
+    data.wires.forEach(
+        wire => {
+
+            if (
+                !wire ||
+                !wire.from ||
+                !wire.to
+            ) {
+                return;
+            }
+
+
+            const newFromId =
+                oldToNewIds[
+                    wire.from.nodeId
+                ];
+
+
+            const newToId =
+                oldToNewIds[
+                    wire.to.nodeId
+                ];
+
+
+            if (
+                !newFromId ||
+                !newToId
+            ) {
+                return;
+            }
+
+
+            studioState.wires.push({
+
+                from: {
+                    nodeId: newFromId,
+                    portName:
+                        wire.from.portName
+                },
+
+                to: {
+                    nodeId: newToId,
+                    portName:
+                        wire.to.portName
+                }
+
+            });
+        }
+    );
+
+
+    /*
+        Evaluate the newly inserted circuit.
+    */
+
+    evaluateCircuitSimulation();
+
+
+    /*
+        Select nothing after insertion.
+    */
+
+    selectNode(null);
+}
+
+/* =========================================================
+   CANVAS PAN / DRAG
+   ========================================================= */
+
+const canvasViewport =
+    document.getElementById('canvas-viewport');
+
+let isPanning = false;
+let panStartX = 0;
+let panStartY = 0;
+let panScrollLeft = 0;
+let panScrollTop = 0;
+
+
+// Start panning with middle mouse button
+canvasViewport.addEventListener('mousedown', (event) => {
+
+    if (event.button !== 1) {
+        return;
+    }
+
+    // Don't pan when clicking a component or terminal.
+    if (
+        event.target.closest('.component-block') ||
+        event.target.closest('.terminal-port')
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+
+    isPanning = true;
+
+    panStartX = event.clientX;
+    panStartY = event.clientY;
+
+    panScrollLeft =
+        canvasViewport.scrollLeft;
+
+    panScrollTop =
+        canvasViewport.scrollTop;
+
+    canvasViewport.style.cursor = 'grabbing';
+});
+
+
+// Move the canvas
+document.addEventListener('mousemove', (event) => {
+
+    if (!isPanning) {
+        return;
+    }
+
+    const dx =
+        event.clientX - panStartX;
+
+    const dy =
+        event.clientY - panStartY;
+
+    canvasViewport.scrollLeft =
+        panScrollLeft - dx;
+
+    canvasViewport.scrollTop =
+        panScrollTop - dy;
+});
+
+
+// Stop panning
+document.addEventListener('mouseup', (event) => {
+
+    if (!isPanning) {
+        return;
+    }
+
+    if (event.button === 1) {
+        isPanning = false;
+        canvasViewport.style.cursor = 'default';
+    }
+});
+
+/* =========================================================
+   LIVE COLLABORATION
+   ========================================================= */
+
+let collaborationSocket = null;
+
+let collaborationRoomCode = null;
+
+let collaborationRole = null;
+
+let isApplyingRemoteState = false;
+
+let collaborationConnected = false;
+
+
+// ---------------------------------------------------------
+// WebSocket URL
+// ---------------------------------------------------------
+
+function getCollaborationSocketURL() {
+
+    const protocol =
+        window.location.protocol === "https:"
+            ? "wss:"
+            : "ws:";
+
+    return `${protocol}//${window.location.host}`;
+}
+
+
+// ---------------------------------------------------------
+// Open collaboration UI
+// ---------------------------------------------------------
+
+function openCollaboration() {
+
+    document.getElementById(
+        "collab-modal"
+    ).style.display = "flex";
+
+
+    clearCollabError();
+
+
+    if (collaborationRoomCode) {
+
+        showCollabRoomScreen();
+
+        return;
+    }
+
+
+    document.getElementById(
+        "collab-main-screen"
+    ).style.display = "block";
+
+
+    document.getElementById(
+        "collab-room-screen"
+    ).style.display = "none";
+}
+
+
+// ---------------------------------------------------------
+// Close collaboration UI
+// ---------------------------------------------------------
+
+function closeCollaboration() {
+
+    document.getElementById(
+        "collab-modal"
+    ).style.display = "none";
+}
+
+
+// ---------------------------------------------------------
+// Error display
+// ---------------------------------------------------------
+
+function showCollabError(message) {
+
+    const element =
+        document.getElementById(
+            "collab-error"
+        );
+
+    element.innerText = message;
+
+    element.style.display = "block";
+}
+
+
+function clearCollabError() {
+
+    const element =
+        document.getElementById(
+            "collab-error"
+        );
+
+    element.innerText = "";
+
+    element.style.display = "none";
+}
+
+
+// ---------------------------------------------------------
+// Open WebSocket connection
+// ---------------------------------------------------------
+
+function connectCollaborationSocket() {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            if (
+                collaborationSocket &&
+                collaborationSocket.readyState ===
+                    WebSocket.OPEN
+            ) {
+
+                resolve();
+
+                return;
+            }
+
+
+            collaborationSocket =
+                new WebSocket(
+                    getCollaborationSocketURL()
+                );
+
+
+            collaborationSocket.onopen = () => {
+
+                collaborationConnected =
+                    true;
+
+                resolve();
+            };
+
+
+            collaborationSocket.onerror = () => {
+
+                collaborationConnected =
+                    false;
+
+                reject(
+                    new Error(
+                        "Could not connect to collaboration server."
+                    )
+                );
+            };
+
+
+            collaborationSocket.onclose = () => {
+
+                collaborationConnected =
+                    false;
+            };
+
+
+            collaborationSocket.onmessage =
+                handleCollaborationMessage;
+        }
+    );
+}
+
+
+// ---------------------------------------------------------
+// Send message
+// ---------------------------------------------------------
+
+function sendCollabMessage(message) {
+
+    if (
+        !collaborationSocket ||
+        collaborationSocket.readyState !==
+            WebSocket.OPEN
+    ) {
+        return false;
+    }
+
+
+    collaborationSocket.send(
+        JSON.stringify(message)
+    );
+
+    return true;
+}
+
+
+// ---------------------------------------------------------
+// Create room
+// ---------------------------------------------------------
+
+async function createCollabRoom() {
+
+    clearCollabError();
+
+
+    const password =
+        document.getElementById(
+            "create-room-password"
+        ).value;
+
+
+    if (!password) {
+
+        showCollabError(
+            "Enter a room password."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        await connectCollaborationSocket();
+
+
+        sendCollabMessage({
+
+            type:
+                "CREATE_ROOM",
+
+            password:
+                password
+        });
+
+
+    } catch (error) {
+
+        showCollabError(
+            error.message
+        );
+    }
+}
+
+
+// ---------------------------------------------------------
+// Join room
+// ---------------------------------------------------------
+
+async function joinCollabRoom() {
+
+    clearCollabError();
+
+
+    const roomCode =
+        document.getElementById(
+            "join-room-code"
+        ).value
+        .trim()
+        .toUpperCase();
+
+
+    const password =
+        document.getElementById(
+            "join-room-password"
+        ).value;
+
+
+    if (
+        !/^[A-Z0-9]{5}$/.test(
+            roomCode
+        )
+    ) {
+
+        showCollabError(
+            "Room codes are 5 characters."
+        );
+
+        return;
+    }
+
+
+    if (!password) {
+
+        showCollabError(
+            "Enter the room password."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        await connectCollaborationSocket();
+
+
+        sendCollabMessage({
+
+            type:
+                "JOIN_ROOM",
+
+            roomCode:
+                roomCode,
+
+            password:
+                password
+        });
+
+
+    } catch (error) {
+
+        showCollabError(
+            error.message
+        );
+    }
+}
+
+
+// ---------------------------------------------------------
+// Handle server messages
+// ---------------------------------------------------------
+
+function handleCollaborationMessage(event) {
+
+    let message;
+
+    try {
+
+        message =
+            JSON.parse(
+                event.data
+            );
+
+    } catch {
+
+        return;
+    }
+
+
+    switch (message.type) {
+
+
+        case "ROOM_CREATED":
+
+            collaborationRoomCode =
+                message.roomCode;
+
+            collaborationRole =
+                "owner";
+
+
+            applyRemoteCircuit(
+                message.circuit
+            );
+
+
+            updateRoomURL(
+                collaborationRoomCode
+            );
+
+
+            showCollabRoomScreen();
+
+            break;
+
+
+        case "ROOM_JOINED":
+
+            collaborationRoomCode =
+                message.roomCode;
+
+            collaborationRole =
+                "member";
+
+
+            applyRemoteCircuit(
+                message.circuit
+            );
+
+
+            updateRoomURL(
+                collaborationRoomCode
+            );
+
+
+            showCollabRoomScreen();
+
+            break;
+
+
+        case "STATE_UPDATE":
+
+            applyRemoteCircuit(
+                message.circuit
+            );
+
+            break;
+
+
+        case "OWNER_CHANGED":
+
+            collaborationRole =
+                "owner";
+
+            break;
+
+
+        case "ERROR":
+
+            showCollabError(
+                message.message
+            );
+
+            break;
+
+            case "CURSOR_MOVE":
+
+    if (
+        message.userId ===
+        collaborationUserId
+    ) {
+        break;
+    }
+
+    renderRemoteCursor(
+        message
+    );
+
+    break;
+
+case "USER_LEFT":
+
+    if (
+        message.userId
+    ) {
+
+        const cursor =
+            remoteCursors[
+                message.userId
+            ];
+
+        if (cursor) {
+
+            cursor.remove();
+
+            delete remoteCursors[
+                message.userId
+            ];
+        }
+    }
+
+    break;
+
+    }
+}
+
+
+// ---------------------------------------------------------
+// Show room screen
+// ---------------------------------------------------------
+
+function showCollabRoomScreen() {
+
+    document.getElementById(
+        "collab-main-screen"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "collab-room-screen"
+    ).style.display = "block";
+
+
+    document.getElementById(
+        "active-room-code"
+    ).innerText =
+        collaborationRoomCode;
+
+
+    document.getElementById(
+        "room-link-display"
+    ).innerText =
+        getRoomURL();
+}
+
+
+// ---------------------------------------------------------
+// URL handling
+// ---------------------------------------------------------
+
+function getRoomURL() {
+
+    return `${window.location.origin}/?room=${encodeURIComponent(
+        collaborationRoomCode
+    )}`;
+}
+
+
+function updateRoomURL(roomCode) {
+
+    const url =
+        `${window.location.pathname}?room=${encodeURIComponent(
+            roomCode
+        )}`;
+
+    window.history.pushState(
+        {},
+        "",
+        url
+    );
+}
+
+
+function clearRoomURL() {
+
+    window.history.pushState(
+        {},
+        "",
+        window.location.pathname
+    );
+}
+
+
+// ---------------------------------------------------------
+// Copy invite link
+// ---------------------------------------------------------
+
+async function copyRoomLink() {
+
+    try {
+
+        await navigator.clipboard.writeText(
+            getRoomURL()
+        );
+
+        alert(
+            "Room link copied."
+        );
+
+    } catch {
+
+        alert(
+            getRoomURL()
+        );
+    }
+}
+
+
+// ---------------------------------------------------------
+// Leave room
+// ---------------------------------------------------------
+
+function leaveCollabRoom() {
+
+    sendCollabMessage({
+        type:
+            "LEAVE_ROOM"
+    });
+
+
+    collaborationRoomCode =
+        null;
+
+    collaborationRole =
+        null;
+
+
+    clearRoomURL();
+
+
+    document.getElementById(
+        "collab-main-screen"
+    ).style.display = "block";
+
+
+    document.getElementById(
+        "collab-room-screen"
+    ).style.display = "none";
+
+
+    closeCollaboration();
+}
+
+
+// ---------------------------------------------------------
+// Make a serializable copy of the circuit
+// ---------------------------------------------------------
+
+function buildCollaborationState() {
+
+    const nodes = {};
+
+
+    for (
+        const id in studioState.nodes
+    ) {
+
+        const node =
+            studioState.nodes[id];
+
+
+        nodes[id] = {
+
+            id: node.id,
+
+            type: node.type,
+
+            x: node.x,
+            y: node.y,
+
+            width: node.width,
+            height: node.height,
+
+            inputs:
+                { ...node.inputs },
+
+            outputs:
+                { ...node.outputs },
+
+            properties:
+                JSON.parse(
+                    JSON.stringify(
+                        node.properties || {}
+                    )
+                ),
+
+            customLabel:
+                node.customLabel,
+
+            lastClkValue:
+                !!node.lastClkValue,
+
+            currentInternalState:
+                !!node.currentInternalState,
+
+            counterValue:
+                Number(
+                    node.counterValue || 0
+                )
+        };
+    }
+
+
+    return {
+
+        nodes,
+
+        wires:
+            studioState.wires.map(
+                wire => ({
+
+                    from: {
+                        nodeId:
+                            wire.from.nodeId,
+
+                        portName:
+                            wire.from.portName
+                    },
+
+                    to: {
+                        nodeId:
+                            wire.to.nodeId,
+
+                        portName:
+                            wire.to.portName
+                    }
+                })
+            ),
+
+        nodeCounter:
+            studioState.nodeCounter
+    };
+}
+
+
+// ---------------------------------------------------------
+// Send current circuit to server
+// ---------------------------------------------------------
+
+function broadcastCircuitState() {
+
+    if (
+        isApplyingRemoteState
+    ) {
+        return;
+    }
+
+
+    if (
+        !collaborationRoomCode
+    ) {
+        return;
+    }
+
+
+    sendCollabMessage({
+
+        type:
+            "STATE_UPDATE",
+
+        circuit:
+            buildCollaborationState()
+    });
+}
+
+
+// ---------------------------------------------------------
+// Apply circuit received from server
+// ---------------------------------------------------------
+
+function applyRemoteCircuit(circuit) {
+
+    if (!circuit) {
+        return;
+    }
+
+
+    isApplyingRemoteState =
+        true;
+
+
+    try {
+
+        rebuildCircuitFromState(
+            circuit
+        );
+
+    } finally {
+
+        isApplyingRemoteState =
+            false;
+    }
+}
+
+
+function rebuildCircuitFromState(circuit) {
+
+    // Stop old clocks
+    for (
+        const id in studioState.nodes
+    ) {
+
+        const node =
+            studioState.nodes[id];
+
+        if (node.clockTimerId) {
+
+            clearInterval(
+                node.clockTimerId
+            );
+        }
+    }
+
+
+    // Remove existing DOM nodes
+    for (
+        const id in studioState.nodes
+    ) {
+
+        const element =
+            document.getElementById(id);
+
+        if (element) {
+            element.remove();
+        }
+    }
+
+
+    // Replace internal state
+    studioState.nodes = {};
+
+    studioState.wires = [];
+
+    studioState.selectedNodeId = null;
+
+    studioState.activeWiringSource = null;
+
+    studioState.nodeCounter =
+        Number(
+            circuit.nodeCounter || 0
+        );
+
+
+    // Recreate nodes
+    for (
+        const id in circuit.nodes
+    ) {
+
+        const saved =
+            circuit.nodes[id];
+
+        const spec =
+            COMPONENT_SPECS[
+                saved.type
+            ];
+
+
+        if (!spec) {
+            continue;
+        }
+
+
+        const node = {
+
+            id: saved.id,
+
+            type: saved.type,
+
+            x: Number(
+                saved.x || 0
+            ),
+
+            y: Number(
+                saved.y || 0
+            ),
+
+            width:
+                Number(
+                    saved.width ||
+                    spec.width
+                ),
+
+            height:
+                Number(
+                    saved.height ||
+                    spec.height
+                ),
+
+            inputs:
+                { ...saved.inputs },
+
+            outputs:
+                { ...saved.outputs },
+
+            properties:
+                JSON.parse(
+                    JSON.stringify(
+                        saved.properties ||
+                        spec.defaultProps ||
+                        {}
+                    )
+                ),
+
+            customLabel:
+                saved.customLabel ||
+                spec.title,
+
+            lastClkValue:
+                !!saved.lastClkValue,
+
+            currentInternalState:
+                !!saved.currentInternalState,
+
+            counterValue:
+                Number(
+                    saved.counterValue || 0
+                )
+        };
+
+
+        studioState.nodes[id] =
+            node;
+
+
+        renderNodeToDOM(node);
+
+
+        if (
+            node.type === "SWITCH"
+        ) {
+
+            const switchElement =
+                document.getElementById(
+                    `${id}_sw`
+                );
+
+
+            if (switchElement) {
+
+                switchElement.classList.toggle(
+                    "active",
+                    node.currentInternalState
+                );
+            }
+        }
+
+
+        if (
+            node.type === "CLOCK"
+        ) {
+
+            startClockInterval(
+                node
+            );
+        }
+    }
+
+
+    // Restore wires
+    studioState.wires =
+        Array.isArray(
+            circuit.wires
+        )
+            ? circuit.wires.map(
+                wire => ({
+
+                    from: {
+                        nodeId:
+                            wire.from.nodeId,
+
+                        portName:
+                            wire.from.portName
+                    },
+
+                    to: {
+                        nodeId:
+                            wire.to.nodeId,
+
+                        portName:
+                            wire.to.portName
+                    }
+                })
+            )
+            : [];
+
+
+    evaluateCircuitSimulation();
+}
+
+
+
+// PASTE ABOVE THIS
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+
+        const room =
+            params.get(
+                "room"
+            );
+
+
+        if (
+            room &&
+            /^[A-Z0-9]{5}$/i.test(room)
+        ) {
+
+            const code =
+                room.toUpperCase();
+
+
+            openCollaboration();
+
+
+            document.getElementById(
+                "join-room-code"
+            ).value =
+                code;
+        }
+    }
+);
+loadPremadeSchematics();
+   </script>
+
+<div id="collab-modal"
+     style="
+        position:fixed;
+        inset:0;
+        display:none;
+        align-items:center;
+        justify-content:center;
+        background:rgba(0,0,0,0.65);
+        z-index:100;
+     ">
+
+    <div style="
+        width:380px;
+        background:var(--panel-bg);
+        border:1px solid var(--panel-border);
+        border-radius:10px;
+        box-shadow:0 20px 60px rgba(0,0,0,0.7);
+        padding:22px;
+    ">
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:18px;
+        ">
+
+            <div style="
+                color:var(--accent-neon);
+                font-weight:800;
+                letter-spacing:1px;
+            ">
+                COLLABORATION
+            </div>
+
+            <button
+                class="btn"
+                onclick="closeCollaboration()"
+                style="padding:5px 9px;"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div id="collab-main-screen">
+
+            <div class="property-group">
+
+   
+
+</div>
+
+            <div class="property-group">
+
+                <div class="property-label">
+                    <p>CREATE A ROOM</p>
+                    <p><i>Room codes are generated</i></p>
+                </div>
+
+                <input
+                    id="create-room-password"
+                    type="password"
+                    class="input-box"
+                    placeholder="Room password"
+                >
+
+                <button
+                    class="btn"
+                    onclick="createCollabRoom()"
+                    style="
+                        margin-top:8px;
+                        justify-content:center;
+                        width:100%;
+                    "
+                >
+                    Create Room
+                </button>
+
+            </div>
+
+
+            <div style="
+                text-align:center;
+                color:var(--text-muted);
+                margin:18px 0;
+            ">
+                OR
+            </div>
+
+
+            <div class="property-group">
+
+                <div class="property-label">
+                    JOIN A ROOM
+                </div>
+
+                <input
+                    id="join-room-code"
+                    class="input-box"
+                    placeholder="Room code"
+                    maxlength="5"
+                    style="
+                        text-transform:uppercase;
+                        margin-bottom:8px;
+                    "
+                >
+
+                <input
+                    id="join-room-password"
+                    type="password"
+                    class="input-box"
+                    placeholder="Room password"
+                >
+
+                
+
+                <button
+                    class="btn"
+                    onclick="joinCollabRoom()"
+                    style="
+                        margin-top:8px;
+                        justify-content:center;
+                        width:100%;
+                    "
+                >
+                    Join Room
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div id="collab-room-screen"
+             style="display:none;">
+
+            <div class="property-group">
+
+                <div class="property-label">
+                    ROOM CODE
+                </div>
+
+                <div style="
+                    display:flex;
+                    gap:8px;
+                ">
+
+                    <div
+                        id="active-room-code"
+                        class="property-value"
+                        style="
+                            flex:1;
+                            font-family:monospace;
+                            font-size:1.1rem;
+                            letter-spacing:3px;
+                        "
+                    >
+                    </div>
+
+                    <button
+                        class="btn"
+                        onclick="copyRoomLink()"
+                    >
+                        Copy Link
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="property-group"
+                 style="margin-top:14px;">
+
+                <div class="property-label">
+                    SHARE THIS LINK
+                </div>
+
+                <div
+                    id="room-link-display"
+                    class="property-value"
+                    style="
+                        word-break:break-all;
+                        font-family:monospace;
+                    "
+                >
+                </div>
+
+            </div>
+
+
+            <div style="
+                margin-top:20px;
+                color:var(--logic-high);
+                font-size:0.8rem;
+            ">
+                ● Connected
+            </div>
+
+
+            <button
+                class="btn danger"
+                onclick="leaveCollabRoom()"
+                style="
+                    margin-top:15px;
+                    width:100%;
+                    justify-content:center;
+                "
+            >
+                Leave Room
+            </button>
+
+        </div>
+
+
+        <div id="collab-error"
+             style="
+                display:none;
+                margin-top:15px;
+                padding:10px;
+                border-radius:6px;
+                background:#2b1619;
+                border:1px solid #542327;
+                color:#ff7d7d;
+                font-size:0.8rem;
+             ">
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

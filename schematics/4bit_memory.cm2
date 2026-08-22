@@ -1,0 +1,688 @@
+{
+  "format": "Circuit Maker 2",
+  "fileType": "CM2",
+  "version": 1,
+  "savedAt": "2026-08-13T22:41:47.629Z",
+  "nodeCounter": 21,
+  "nodes": {
+    "node_1": {
+      "id": "node_1",
+      "type": "SWITCH",
+      "x": 220,
+      "y": 40,
+      "width": 100,
+      "height": 60,
+      "inputs": {},
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "Bit 1",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_2": {
+      "id": "node_2",
+      "type": "SWITCH",
+      "x": 220,
+      "y": 120,
+      "width": 100,
+      "height": 60,
+      "inputs": {},
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "Bit 2",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_3": {
+      "id": "node_3",
+      "type": "SWITCH",
+      "x": 220,
+      "y": 200,
+      "width": 100,
+      "height": 60,
+      "inputs": {},
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "Bit 3",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_4": {
+      "id": "node_4",
+      "type": "SWITCH",
+      "x": 220,
+      "y": 280,
+      "width": 100,
+      "height": 60,
+      "inputs": {},
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "Bit 4",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_5": {
+      "id": "node_5",
+      "type": "AND",
+      "x": 580,
+      "y": 40,
+      "width": 100,
+      "height": 80,
+      "inputs": {
+        "in1": false,
+        "in2": false
+      },
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "AND Junction",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_6": {
+      "id": "node_6",
+      "type": "XOR",
+      "x": 400,
+      "y": 40,
+      "width": 100,
+      "height": 80,
+      "inputs": {
+        "in1": false,
+        "in2": false
+      },
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "XOR Junction",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_7": {
+      "id": "node_7",
+      "type": "XOR",
+      "x": 400,
+      "y": 120,
+      "width": 100,
+      "height": 80,
+      "inputs": {
+        "in1": false,
+        "in2": false
+      },
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "XOR Junction",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_8": {
+      "id": "node_8",
+      "type": "XOR",
+      "x": 400,
+      "y": 200,
+      "width": 100,
+      "height": 80,
+      "inputs": {
+        "in1": false,
+        "in2": false
+      },
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "XOR Junction",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_9": {
+      "id": "node_9",
+      "type": "XOR",
+      "x": 400,
+      "y": 280,
+      "width": 100,
+      "height": 80,
+      "inputs": {
+        "in1": false,
+        "in2": false
+      },
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "XOR Junction",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_10": {
+      "id": "node_10",
+      "type": "AND",
+      "x": 580,
+      "y": 120,
+      "width": 100,
+      "height": 80,
+      "inputs": {
+        "in1": false,
+        "in2": false
+      },
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "AND Junction",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_11": {
+      "id": "node_11",
+      "type": "AND",
+      "x": 580,
+      "y": 200,
+      "width": 100,
+      "height": 80,
+      "inputs": {
+        "in1": false,
+        "in2": false
+      },
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "AND Junction",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_12": {
+      "id": "node_12",
+      "type": "AND",
+      "x": 580,
+      "y": 280,
+      "width": 100,
+      "height": 80,
+      "inputs": {
+        "in1": false,
+        "in2": false
+      },
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "AND Junction",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_13": {
+      "id": "node_13",
+      "type": "T_FF",
+      "x": 800,
+      "y": 20,
+      "width": 120,
+      "height": 90,
+      "inputs": {
+        "clk": false,
+        "t": false
+      },
+      "outputs": {
+        "q": false,
+        "q_bar": true
+      },
+      "properties": {},
+      "customLabel": "T Flip-Flop",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_14": {
+      "id": "node_14",
+      "type": "T_FF",
+      "x": 800,
+      "y": 100,
+      "width": 120,
+      "height": 90,
+      "inputs": {
+        "clk": false,
+        "t": false
+      },
+      "outputs": {
+        "q": false,
+        "q_bar": true
+      },
+      "properties": {},
+      "customLabel": "T Flip-Flop",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_15": {
+      "id": "node_15",
+      "type": "T_FF",
+      "x": 800,
+      "y": 180,
+      "width": 120,
+      "height": 90,
+      "inputs": {
+        "clk": false,
+        "t": false
+      },
+      "outputs": {
+        "q": false,
+        "q_bar": true
+      },
+      "properties": {},
+      "customLabel": "T Flip-Flop",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_16": {
+      "id": "node_16",
+      "type": "T_FF",
+      "x": 800,
+      "y": 260,
+      "width": 120,
+      "height": 90,
+      "inputs": {
+        "clk": false,
+        "t": false
+      },
+      "outputs": {
+        "q": false,
+        "q_bar": true
+      },
+      "properties": {},
+      "customLabel": "T Flip-Flop",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_17": {
+      "id": "node_17",
+      "type": "BUTTON",
+      "x": 400,
+      "y": 360,
+      "width": 100,
+      "height": 60,
+      "inputs": {},
+      "outputs": {
+        "out": false
+      },
+      "properties": {},
+      "customLabel": "CLK / Clock",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_18": {
+      "id": "node_18",
+      "type": "LED",
+      "x": 980,
+      "y": 40,
+      "width": 90,
+      "height": 70,
+      "inputs": {
+        "in": false
+      },
+      "outputs": {},
+      "properties": {},
+      "customLabel": "Output LED",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_19": {
+      "id": "node_19",
+      "type": "LED",
+      "x": 980,
+      "y": 120,
+      "width": 90,
+      "height": 70,
+      "inputs": {
+        "in": false
+      },
+      "outputs": {},
+      "properties": {},
+      "customLabel": "Output LED",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_20": {
+      "id": "node_20",
+      "type": "LED",
+      "x": 980,
+      "y": 200,
+      "width": 90,
+      "height": 70,
+      "inputs": {
+        "in": false
+      },
+      "outputs": {},
+      "properties": {},
+      "customLabel": "Output LED",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    },
+    "node_21": {
+      "id": "node_21",
+      "type": "LED",
+      "x": 980,
+      "y": 280,
+      "width": 90,
+      "height": 70,
+      "inputs": {
+        "in": false
+      },
+      "outputs": {},
+      "properties": {},
+      "customLabel": "Output LED",
+      "lastClkValue": false,
+      "currentInternalState": false,
+      "counterValue": 0
+    }
+  },
+  "wires": [
+    {
+      "from": {
+        "nodeId": "node_5",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_13",
+        "portName": "clk"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_5",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_13",
+        "portName": "t"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_10",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_14",
+        "portName": "clk"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_10",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_14",
+        "portName": "t"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_11",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_15",
+        "portName": "clk"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_11",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_15",
+        "portName": "t"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_12",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_16",
+        "portName": "clk"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_12",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_16",
+        "portName": "t"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_9",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_12",
+        "portName": "in1"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_8",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_11",
+        "portName": "in1"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_7",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_10",
+        "portName": "in1"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_6",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_5",
+        "portName": "in1"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_1",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_6",
+        "portName": "in1"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_2",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_7",
+        "portName": "in1"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_3",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_8",
+        "portName": "in1"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_4",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_9",
+        "portName": "in1"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_13",
+        "portName": "q"
+      },
+      "to": {
+        "nodeId": "node_6",
+        "portName": "in2"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_14",
+        "portName": "q"
+      },
+      "to": {
+        "nodeId": "node_7",
+        "portName": "in2"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_15",
+        "portName": "q"
+      },
+      "to": {
+        "nodeId": "node_8",
+        "portName": "in2"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_16",
+        "portName": "q"
+      },
+      "to": {
+        "nodeId": "node_9",
+        "portName": "in2"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_17",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_12",
+        "portName": "in2"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_17",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_11",
+        "portName": "in2"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_17",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_10",
+        "portName": "in2"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_17",
+        "portName": "out"
+      },
+      "to": {
+        "nodeId": "node_5",
+        "portName": "in2"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_13",
+        "portName": "q"
+      },
+      "to": {
+        "nodeId": "node_18",
+        "portName": "in"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_14",
+        "portName": "q"
+      },
+      "to": {
+        "nodeId": "node_19",
+        "portName": "in"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_15",
+        "portName": "q"
+      },
+      "to": {
+        "nodeId": "node_20",
+        "portName": "in"
+      }
+    },
+    {
+      "from": {
+        "nodeId": "node_16",
+        "portName": "q"
+      },
+      "to": {
+        "nodeId": "node_21",
+        "portName": "in"
+      }
+    }
+  ]
+}
