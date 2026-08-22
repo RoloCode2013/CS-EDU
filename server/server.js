@@ -3,11 +3,10 @@ const http = require("http");
 const crypto = require("crypto");
 const WebSocket = require("ws");
 const path = require("path");
-import { fileURLToPath } from 'url'; 
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ server, path: '/ws' });
 
 const PORT = process.env.PORT || 3000;
 

@@ -3724,62 +3724,20 @@ function clearCollabError() {
 // ---------------------------------------------------------
 
 function connectCollaborationSocket() {
+    // Automatically uses wss:// on Railway/Codespaces and ws:// on localhost
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    
+    // This resolves exactly to 'cs-edu-production.up.railway.app' automatically
+    const wsUrl = `${protocol}${window.location.host}/ws`; 
 
-    return new Promise(
-        (resolve, reject) => {
+    console.log("Connecting to:", wsUrl);
+    
+    // Initialize the socket
+    window.socket = new WebSocket(wsUrl);
 
-            if (
-                collaborationSocket &&
-                collaborationSocket.readyState ===
-                    WebSocket.OPEN
-            ) {
-
-                resolve();
-
-                return;
-            }
-
-
-            collaborationSocket =
-                new WebSocket(
-                    getCollaborationSocketURL()
-                );
-
-
-            collaborationSocket.onopen = () => {
-
-                collaborationConnected =
-                    true;
-
-                resolve();
-            };
-
-
-            collaborationSocket.onerror = () => {
-
-                collaborationConnected =
-                    false;
-
-                reject(
-                    new Error(
-                        "Could not connect to collaboration server."
-                    )
-                );
-            };
-
-
-            collaborationSocket.onclose = () => {
-
-                collaborationConnected =
-                    false;
-            };
-
-
-            collaborationSocket.onmessage =
-                handleCollaborationMessage;
-        }
-    );
+    // Keep your existing socket event listeners below this line...
 }
+
 
 
 // ---------------------------------------------------------

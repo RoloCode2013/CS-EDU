@@ -1,7 +1,7 @@
 {
   "name": "circuit-maker-2-server",
   "version": "1.0.0",
-  "private": true,
+  "private": false,
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
