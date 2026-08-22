@@ -6,7 +6,10 @@ const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server, path: '/ws' });
+
+// Add the path parameter so Railway routes the handshake correctly
+const wss = new WebSocket.Server({ server });
+
 
 const PORT = process.env.PORT || 3000;
 

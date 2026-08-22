@@ -628,7 +628,7 @@
         </svg>
         Load Circuit
     </button>
-
+<!--
     <button class="btn" onclick="openCollaboration()">
     <svg width="14" height="14"
          viewBox="0 0 24 24"
@@ -645,7 +645,7 @@
 
     Collaboration Menu
 </button>
-
+-->
     <button class="btn danger" onclick="clearWorkspace()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2">
@@ -3723,20 +3723,20 @@ function clearCollabError() {
 // Open WebSocket connection
 // ---------------------------------------------------------
 
+// 📁 CircuitMaker.html
 function connectCollaborationSocket() {
-    // Automatically uses wss:// on Railway/Codespaces and ws:// on localhost
     const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
     
-    // This resolves exactly to 'cs-edu-production.up.railway.app' automatically
-    const wsUrl = `${protocol}${window.location.host}/ws`; 
+    // 🚀 Change this line so it strictly connects to the base url without /ws
+    const wsUrl = `${protocol}${window.location.host}/`; 
 
     console.log("Connecting to:", wsUrl);
-    
-    // Initialize the socket
     window.socket = new WebSocket(wsUrl);
 
-    // Keep your existing socket event listeners below this line...
+    // Leave all your connection logic (onopen, onmessage) below this exactly the same...
 }
+
+
 
 
 
